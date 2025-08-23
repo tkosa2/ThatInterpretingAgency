@@ -1,0 +1,48 @@
+.theme-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.theme-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease-in-out;
+    font-size: 0.875rem;
+}
+
+.theme-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.theme-text {
+    font-weight: 500;
+}
+
+/* Dark mode specific styles */
+[data-theme="dark"] .theme-btn {
+    background-color: var(--bs-dark);
+    border-color: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+[data-theme="dark"] .theme-btn:hover {
+    background-color: var(--bs-dark-hover);
+    border-color: var(--bs-dark-hover);
+}
+
+/* Light mode specific styles */
+[data-theme="light"] .theme-btn {
+    background-color: var(--bs-light);
+    border-color: var(--bs-secondary);
+    color: var(--bs-secondary);
+}
+
+[data-theme="light"] .theme-btn:hover {
+    background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
+    color: var(--bs-light);
+}

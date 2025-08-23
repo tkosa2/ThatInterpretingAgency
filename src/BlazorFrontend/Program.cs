@@ -26,6 +26,9 @@ builder.Services.AddScoped<IAgencyService, AgencyService>();
 builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IInterpreterRequestService, InterpreterRequestService>();
 
+// Register theme service
+builder.Services.AddScoped<ThemeService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

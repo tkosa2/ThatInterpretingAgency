@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@using BlazorFrontend.Services
+@inject ThemeService ThemeService
 
 <div class="page">
     <div class="sidebar">
@@ -7,6 +9,7 @@
 
     <main>
         <div class="top-row px-4">
+            <ThemeToggle />
             <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
         </div>
 
@@ -15,3 +18,13 @@
         </article>
     </main>
 </div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.InitializeThemeAsync();
+        }
+    }
+}
