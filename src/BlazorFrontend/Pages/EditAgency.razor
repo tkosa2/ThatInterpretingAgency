@@ -1,0 +1,255 @@
+@page "/edit-agency/{id}"
+@using ThatInterpretingAgency.Core.DTOs
+@using BlazorFrontend.Services
+@inject IAgencyService AgencyService
+@inject NavigationManager Navigation
+@inject ILogger<EditAgency> Logger
+
+<PageTitle>Edit Agency - THAT Interpreting Agency</PageTitle>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        Edit Agency
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading agency information...</p>
+                        </div>
+                    }
+                    else if (agency == null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Agency not found.
+                        </div>
+                        <button class="btn btn-secondary" @onclick="GoBack">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Agencies
+                        </button>
+                    }
+                    else
+                    {
+                        <EditForm Model="@updateRequest" OnValidSubmit="HandleValidSubmit">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="name" class="form-label">Agency Name *</label>
+                                    <InputText id="name" class="@(nameError ? "form-control is-invalid" : "form-control")" 
+                                             @bind-Value="updateRequest.Name" />
+                                    @if (nameError)
+                                    {
+                                        <div class="invalid-feedback">@nameErrorMessage</div>
+                                    }
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email *</label>
+                                    <InputText id="email" type="email" class="@(emailError ? "form-control is-invalid" : "form-control")" 
+                                             @bind-Value="updateRequest.Email" />
+                                    @if (emailError)
+                                    {
+                                        <div class="invalid-feedback">@emailErrorMessage</div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Phone</label>
+                                    <InputText id="phone" class="form-control" @bind-Value="updateRequest.Phone" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="contactInfo" class="form-label">Contact Person</label>
+                                    <InputText id="contactInfo" class="form-control" @bind-Value="updateRequest.ContactInfo" />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Address</label>
+                                <InputTextArea id="address" class="form-control" rows="3" @bind-Value="updateRequest.Address" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <InputSelect id="status" class="form-control" @bind-Value="updateRequest.Status">
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Suspended">Suspended</option>
+                                </InputSelect>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-secondary" @onclick="GoBack">
+                                    <i class="fas fa-arrow-left me-2"></i>
+                                    Back
+                                </button>
+                                <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Updating...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-save me-2"></i>
+                                        <span>Update Agency</span>
+                                    }
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @successMessage
+                    <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    private AgencyData? agency;
+    private UpdateAgencyRequest updateRequest = new();
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? successMessage;
+    private string? errorMessage;
+    private bool nameError = false;
+    private bool emailError = false;
+    private string? nameErrorMessage;
+    private string? emailErrorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAgency();
+    }
+
+    private async Task LoadAgency()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            agency = await AgencyService.GetAgencyAsync(Id);
+            
+            if (agency != null)
+            {
+                // Populate the update request with current agency data
+                updateRequest = new UpdateAgencyRequest
+                {
+                    Name = agency.Name,
+                    ContactInfo = agency.ContactInfo,
+                    Address = agency.Address,
+                    Phone = agency.Phone,
+                    Email = agency.Email,
+                    Status = agency.Status
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading agency {AgencyId}", Id);
+            errorMessage = "Failed to load agency information. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+            nameError = false;
+            emailError = false;
+            nameErrorMessage = null;
+            emailErrorMessage = null;
+
+            // Basic validation
+            if (string.IsNullOrWhiteSpace(updateRequest.Name))
+            {
+                nameError = true;
+                nameErrorMessage = "Agency name is required.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(updateRequest.Email))
+            {
+                emailError = true;
+                emailErrorMessage = "Email is required.";
+                return;
+            }
+
+            // Call the service to update the agency
+            var updatedAgency = await AgencyService.UpdateAgencyAsync(Id, updateRequest);
+
+            if (updatedAgency != null)
+            {
+                successMessage = $"Agency '{updatedAgency.Name}' updated successfully!";
+                
+                // Redirect to agencies list after a short delay
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/agencies");
+            }
+            else
+            {
+                errorMessage = "Failed to update agency. Please try again.";
+            }
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists"))
+        {
+            // Handle duplicate agency name error
+            nameError = true;
+            nameErrorMessage = "Agency already exists. Please use a different agency name.";
+            errorMessage = "Agency already exists. Please use a different agency name.";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating agency {AgencyId}", Id);
+            errorMessage = "An error occurred while updating the agency. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/agencies");
+    }
+}

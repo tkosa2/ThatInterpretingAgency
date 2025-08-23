@@ -1,0 +1,167 @@
+# User Stories for THAT Interpreting Agency
+
+This document outlines user stories for the THAT Interpreting Agency application, a global platform for managing interpreting services. The application uses ASP.NET Core 9, Domain-Driven Design (DDD) with vertical slice architecture, MSSQL database, and QuickBooks Online for billing. Stories are grouped by bounded context (Agency Management, Interpreter Management, Client Management, Scheduling, Billing, Notifications) and include acceptance criteria to guide development and testing. Stories are prioritized using MoSCoW (Must-have, Should-have, Could-have, Won’t-have).
+
+## Personas
+- **Agency Admin**: Manages agency operations, including staff, interpreters, clients, and billing.
+- **Interpreter**: Provides interpreting services, manages availability, and receives payments via QuickBooks.
+- **Client**: Books interpreters for appointments and pays invoices via QuickBooks.
+
+## Agency Management
+
+### US-1: Create Agency (Must-have)
+**As an Agency Admin**, I want to create a new agency so that I can manage interpreters and clients under THAT Interpreting Agency.
+
+**Acceptance Criteria**:
+- Create an agency with Name, ContactInfo, and unique Id.
+- Store in MSSQL Agencies table.
+- Validate that Name is unique and not empty.
+- Only authenticated admins can create agencies.
+- Return error if AgencyId already exists.
+
+### US-2: Assign Staff to Agency (Must-have)
+**As an Agency Admin**, I want to assign users as staff (e.g., interpreters, admins) to an agency so that they can perform agency-specific tasks.
+
+**Acceptance Criteria**:
+- Add a user to AgencyStaff table with AgencyId, UserId, Role (e.g., Interpreter, Admin), HireDate, and Status.
+- Validate that the user and agency exist in MSSQL.
+- Ensure the user is not already assigned to the agency with the same role.
+- Restrict to admins of the same agency.
+
+## Interpreter Management
+
+### US-3: Create Interpreter Profile (Must-have)
+**As an Agency Admin**, I want to create interpreter profiles for THAT Interpreting Agency so that I can assign certified interpreters to clients.
+
+**Acceptance Criteria**:
+- Create an interpreter with UserId, AgencyId, FullName, and Skills (e.g., Spanish, ASL).
+- Store in MSSQL Interpreters table, linked to AspNetUsers and Agencies.
+- Validate that UserId is associated with the agency via AgencyStaff (Role: Interpreter).
+- Ensure no duplicate UserId in Interpreters table.
+- Return error for invalid AgencyId.
+
+### US-4: Update Interpreter Availability (Must-have)
+**As an Interpreter**, I want to update my availability across time zones so that I can be scheduled for appointments without conflicts.
+
+**Acceptance Criteria**:
+- Add or update availability slots (StartTime, EndTime) in MSSQL.
+- Store times in UTC, display in user’s time zone.
+- Validate no overlapping slots for the interpreter.
+- Restrict to interpreters in the same agency (via AgencyStaff).
+- Return error if slot conflicts with existing appointments.
+
+## Client Management
+
+### US-5: Create Client Profile (Must-have)
+**As an Agency Admin**, I want to create client profiles so that clients can book interpreters.
+
+**Acceptance Criteria**:
+- Create a client with UserId, AgencyId, OrganizationName, and Preferences (e.g., preferred languages).
+- Store in MSSQL Clients table, linked to AspNetUsers and Agencies.
+- Validate that UserId is associated with the agency (e.g., via Clients.AgencyId).
+- Ensure no duplicate UserId in Clients table.
+- Return error for invalid AgencyId.
+
+### US-6: Update Client Preferences (Should-have)
+**As a Client**, I want to update my preferences (e.g., language, location) so that I can find suitable interpreters.
+
+**Acceptance Criteria**:
+- Update Preferences in MSSQL Clients table.
+- Validate that the client belongs to the agency.
+- Ensure preferences are valid (e.g., supported languages).
+- Log changes for audit purposes.
+
+## Scheduling
+
+### US-7: Book Appointment (Must-have)
+**As a Client**, I want to book an appointment with filters for language skills and location so that I can find suitable interpreters quickly.
+
+**Acceptance Criteria**:
+- API returns available interpreters based on skills, location, and availability.
+- Create appointment with AgencyId, InterpreterId, ClientId, TimeSlot (StartTime, EndTime), and Status.
+- Store in MSSQL Appointments table, ensuring InterpreterId and ClientId belong to the same AgencyId.
+- Validate no overlapping appointments for the interpreter.
+- Trigger notification to interpreter and client.
+- Return error for invalid or unavailable time slots.
+
+### US-8: View Available Time Slots (Should-have)
+**As a Client**, I want to view available time slots for an interpreter so that I can choose a convenient time.
+
+**Acceptance Criteria**:
+- API returns time slots based on interpreter’s availability and existing appointments.
+- Filter by AgencyId to ensure agency scoping.
+- Display times in client’s time zone, stored in UTC.
+- Return empty list if no slots are available.
+
+## Billing
+
+### US-9: Trigger Invoice Creation in QuickBooks (Must-have)
+**As an Agency Admin**, I want to trigger invoice creation in QuickBooks for completed appointments so that clients receive bills automatically.
+
+**Acceptance Criteria**:
+- After an appointment is marked "Completed," send details (ClientId, AppointmentId, duration, rate) to QuickBooks API.
+- Store QuickBooksInvoiceId in MSSQL Invoices table with AgencyId, ClientId, and AppointmentId.
+- Validate that ClientId and InterpreterId belong to the same AgencyId.
+- Handle QuickBooks API errors (e.g., rate limits) and retry.
+- Return error if appointment is not completed or agency mismatch.
+
+### US-10: Receive Invoice from QuickBooks (Must-have)
+**As a Client**, I want to receive invoices from QuickBooks so that I can pay securely.
+
+**Acceptance Criteria**:
+- QuickBooks sends an email with invoice details and payment link.
+- MSSQL Invoices table stores QuickBooksInvoiceId, no financial details (e.g., amount).
+- Log invoice creation in Notifications table for tracking.
+- Ensure invoice is tied to the correct AgencyId.
+
+### US-11: Receive Payment via QuickBooks (Must-have)
+**As an Interpreter**, I want QuickBooks to handle my payments so that I receive funds for completed appointments.
+
+**Acceptance Criteria**:
+- After client pays invoice via QuickBooks, trigger payment to interpreter’s account (e.g., via QuickBooks Payments or ACH).
+- No payment details stored in MSSQL, only QuickBooksInvoiceId.
+- Validate interpreter is in AgencyStaff with Role: Interpreter.
+- Log payment initiation in Notifications table.
+
+### US-12: View Invoice List (Should-have)
+**As an Agency Admin**, I want to view a list of invoices with QuickBooks Invoice IDs so that I can track billing status.
+
+**Acceptance Criteria**:
+- API returns invoices filtered by AgencyId, showing QuickBooksInvoiceId, AppointmentId, and CreatedAt.
+- Query QuickBooks API for payment status (e.g., Paid, Pending).
+- Restrict to admins of the same agency.
+- No sensitive financial data stored locally.
+
+## Notifications
+
+### US-13: Send Appointment Reminder (Must-have)
+**As an Interpreter or Client**, I want to receive appointment reminders via email or SMS so that I don’t miss bookings.
+
+**Acceptance Criteria**:
+- Trigger notification (Type: Email/SMS) 24 hours before appointment.
+- Store in MSSQL Notifications table with AgencyId, UserId, Message, and SentAt.
+- Use external services (e.g., SendGrid, Twilio) for delivery.
+- Validate recipient is in the same agency as the appointment.
+- Log delivery status (success/failure).
+
+### US-14: Receive Invoice Notification (Should-have)
+**As a Client**, I want to receive a notification when an invoice is created so that I can pay promptly.
+
+**Acceptance Criteria**:
+- After invoice creation in QuickBooks, log notification in MSSQL Notifications table.
+- Send email/SMS via external service with QuickBooks invoice link.
+- Ensure notification is scoped to AgencyId.
+- Handle delivery failures gracefully.
+
+## Prioritization
+- **Must-have**: US-1, US-2, US-3, US-4, US-5, US-7, US-9, US-10, US-11, US-13
+- **Should-have**: US-6, US-8, US-12, US-14
+- **Could-have**: Additional filters for appointment booking (e.g., interpreter ratings).
+- **Won’t-have**: Manual invoice creation (handled by QuickBooks).
+
+## Development Notes
+- **Vertical Slices**: Implement each story as a vertical slice (e.g., `CreateInvoiceCommand` for US-9).
+- **MSSQL**: Use EF Core with MSSQL provider; apply schema via `update_schema.sql`.
+- **QuickBooks**: Integrate with QuickBooks Online API for US-9, US-10, US-11.
+- **Testing**: Write xUnit tests for each story (unit, integration, E2E).
+- **Tools**: Use Visual Studio Code with extensions (C#, SQL Server, REST Client).

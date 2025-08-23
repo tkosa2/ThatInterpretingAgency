@@ -1,0 +1,140 @@
+@page "/agency-details/{id}"
+@using ThatInterpretingAgency.Core.DTOs
+@using BlazorFrontend.Services
+@inject IAgencyService AgencyService
+@inject NavigationManager Navigation
+@inject ILogger<AgencyDetails> Logger
+
+<PageTitle>Agency Details - THAT Interpreting Agency</PageTitle>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-building me-2"></i>
+                        Agency Details
+                    </h3>
+                </div>
+                <div class="card-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading agency information...</p>
+                        </div>
+                    }
+                    else if (agency == null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Agency not found.
+                        </div>
+                        <button class="btn btn-secondary" @onclick="GoBack">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Back to Agencies
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Agency Name</label>
+                                <p class="form-control-plaintext">@agency.Name</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <p class="form-control-plaintext">@agency.Email</p>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Phone</label>
+                                <p class="form-control-plaintext">@(string.IsNullOrEmpty(agency.Phone) ? "Not specified" : agency.Phone)</p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Contact Person</label>
+                                <p class="form-control-plaintext">@agency.ContactInfo</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Address</label>
+                            <p class="form-control-plaintext">@(string.IsNullOrEmpty(agency.Address) ? "Not specified" : agency.Address)</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Status</label>
+                            <span class="badge bg-@(agency.Status == "Active" ? "success" : agency.Status == "Inactive" ? "secondary" : "warning")">@agency.Status</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Created</label>
+                            <p class="form-control-plaintext">@agency.CreatedAt.ToString("MMM dd, yyyy")</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Last Updated</label>
+                            <p class="form-control-plaintext">@agency.UpdatedAt.ToString("MMM dd, yyyy")</p>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" @onclick="GoBack">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back to Agencies
+                            </button>
+                            <button type="button" class="btn btn-primary" @onclick="() => EditAgency()">
+                                <i class="fas fa-edit me-2"></i>
+                                Edit Agency
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    private AgencyData? agency;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAgency();
+    }
+
+    private async Task LoadAgency()
+    {
+        try
+        {
+            isLoading = true;
+            agency = await AgencyService.GetAgencyAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading agency {AgencyId}", Id);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void EditAgency()
+    {
+        Navigation.NavigateTo($"/edit-agency/{Id}");
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/agencies");
+    }
+}

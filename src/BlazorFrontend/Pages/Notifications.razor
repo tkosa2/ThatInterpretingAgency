@@ -1,0 +1,352 @@
+@page "/notifications"
+
+<PageTitle>Notifications - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <h2>Notifications</h2>
+    
+    <div class="row mb-3">
+        <div class="col">
+            <button class="btn btn-primary" @onclick="ShowCreateForm">
+                <span class="oi oi-plus"></span> Send New Notification
+            </button>
+        </div>
+        <div class="col text-end">
+            <button class="btn btn-outline-secondary" @onclick="MarkAllAsRead">
+                <span class="oi oi-check"></span> Mark All as Read
+            </button>
+        </div>
+    </div>
+
+    @if (showCreateForm)
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Send New Notification</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="notificationType">Type</label>
+                            <select id="notificationType" class="form-control" @bind="notificationType">
+                                <option value="Email">Email</option>
+                                <option value="SMS">SMS</option>
+                                <option value="InApp">In-App</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="userId">User ID</label>
+                            <input id="userId" class="form-control" @bind="userId" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" class="form-control" rows="3" @bind="message"></textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="agencyId">Agency ID</label>
+                            <input id="agencyId" class="form-control" @bind="agencyId" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-success" @onclick="SendNotification">Send Notification</button>
+                    <button class="btn btn-secondary ms-2" @onclick="CancelCreate">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Notifications</h5>
+                </div>
+                <div class="card-body">
+                    @if (notifications == null)
+                    {
+                        <p>Loading notifications...</p>
+                    }
+                    else if (!notifications.Any())
+                    {
+                        <p>No notifications found.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Message</th>
+                                        <th>User</th>
+                                        <th>Status</th>
+                                        <th>Sent</th>
+                                        <th>Read</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var notification in notifications)
+                                    {
+                                        <tr class="@(notification.Status == "Unread" ? "table-warning" : "")">
+                                            <td>
+                                                <span class="badge @GetNotificationTypeBadgeClass(notification.Type)">
+                                                    @notification.Type
+                                                </span>
+                                            </td>
+                                            <td>@notification.Message</td>
+                                            <td>@notification.UserId</td>
+                                            <td>
+                                                <span class="badge @GetNotificationStatusBadgeClass(notification.Status)">
+                                                    @notification.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (notification.SentAt.HasValue)
+                                                {
+                                                    @notification.SentAt.Value.ToShortDateString()
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Not sent</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (notification.ReadAt.HasValue)
+                                                {
+                                                    @notification.ReadAt.Value.ToShortDateString()
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Unread</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                @if (notification.Status == "Unread")
+                                                {
+                                                    <button class="btn btn-sm btn-outline-success" @onclick="() => MarkAsRead(notification)">
+                                                        <span class="oi oi-check"></span>
+                                                    </button>
+                                                }
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewNotification(notification)">
+                                                    <span class="oi oi-eye"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteNotification(notification)">
+                                                    <span class="oi oi-trash"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Notification Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <h6>Total</h6>
+                            <p class="h4">@(notifications?.Count ?? 0)</p>
+                        </div>
+                        <div class="col-6">
+                            <h6>Unread</h6>
+                            <p class="h5 text-warning">@(notifications?.Count(n => n.Status == "Unread") ?? 0)</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <h6>Email</h6>
+                            <p class="h6">@(notifications?.Count(n => n.Type == "Email") ?? 0)</p>
+                        </div>
+                        <div class="col-6">
+                            <h6>SMS</h6>
+                            <p class="h6">@(notifications?.Count(n => n.Type == "SMS") ?? 0)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" @onclick="SendBulkNotifications">
+                            <span class="oi oi-envelope-closed"></span> Send Bulk Notifications
+                        </button>
+                        <button class="btn btn-outline-info" @onclick="ViewTemplates">
+                            <span class="oi oi-document"></span> View Templates
+                        </button>
+                        <button class="btn btn-outline-warning" @onclick="RetryFailedNotifications">
+                            <span class="oi oi-reload"></span> Retry Failed
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<NotificationData>? notifications;
+    private bool showCreateForm = false;
+    private string notificationType = "Email";
+    private string userId = "";
+    private string message = "";
+    private string agencyId = "";
+
+    public class NotificationData
+    {
+        public string Id { get; set; } = "";
+        public string Type { get; set; } = "Email";
+        public string Message { get; set; } = "";
+        public string UserId { get; set; } = "";
+        public string Status { get; set; } = "Unread";
+        public string AgencyId { get; set; } = "";
+        public DateTime? SentAt { get; set; }
+        public DateTime? ReadAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNotifications();
+    }
+
+    private async Task LoadNotifications()
+    {
+        // TODO: Call API to get notifications
+        notifications = new List<NotificationData>();
+    }
+
+    private void ShowCreateForm()
+    {
+        showCreateForm = true;
+        notificationType = "Email";
+        userId = "";
+        message = "";
+        agencyId = "";
+    }
+
+    private void CancelCreate()
+    {
+        showCreateForm = false;
+    }
+
+    private async Task SendNotification()
+    {
+        if (!string.IsNullOrEmpty(message) && !string.IsNullOrEmpty(userId))
+        {
+            notifications?.Add(new NotificationData
+            {
+                Id = Guid.NewGuid().ToString(),
+                Type = notificationType,
+                Message = message,
+                UserId = userId,
+                Status = "Unread",
+                AgencyId = agencyId,
+                CreatedAt = DateTime.Now
+            });
+        }
+        showCreateForm = false;
+        await LoadNotifications();
+    }
+
+    private async Task MarkAsRead(NotificationData notification)
+    {
+        // TODO: Call API to mark notification as read
+        notification.Status = "Read";
+        notification.ReadAt = DateTime.Now;
+        await LoadNotifications();
+    }
+
+    private async Task MarkAllAsRead()
+    {
+        // TODO: Call API to mark all notifications as read
+        if (notifications != null)
+        {
+            foreach (var notification in notifications.Where(n => n.Status == "Unread"))
+            {
+                notification.Status = "Read";
+                notification.ReadAt = DateTime.Now;
+            }
+        }
+        await LoadNotifications();
+    }
+
+    private void ViewNotification(NotificationData notification)
+    {
+        // TODO: Show notification details
+    }
+
+    private async Task DeleteNotification(NotificationData notification)
+    {
+        // TODO: Call API to delete notification
+        notifications?.Remove(notification);
+        await LoadNotifications();
+    }
+
+    private void SendBulkNotifications()
+    {
+        // TODO: Implement bulk notification sending
+    }
+
+    private void ViewTemplates()
+    {
+        // TODO: Show notification templates
+    }
+
+    private async Task RetryFailedNotifications()
+    {
+        // TODO: Call API to retry failed notifications
+        await LoadNotifications();
+    }
+
+    private string GetNotificationTypeBadgeClass(string type)
+    {
+        return type switch
+        {
+            "Email" => "bg-primary",
+            "SMS" => "bg-success",
+            "InApp" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetNotificationStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Unread" => "bg-warning",
+            "Read" => "bg-success",
+            "Sent" => "bg-info",
+            "Failed" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

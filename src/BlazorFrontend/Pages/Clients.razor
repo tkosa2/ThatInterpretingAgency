@@ -1,0 +1,246 @@
+@page "/clients"
+
+<PageTitle>Clients - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <h2>Manage Clients</h2>
+    
+    <div class="row mb-3">
+        <div class="col">
+            <button class="btn btn-primary" @onclick="ShowCreateForm">
+                <span class="oi oi-plus"></span> Add New Client
+            </button>
+        </div>
+    </div>
+
+    @if (showCreateForm)
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Add New Client</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="organizationName">Organization Name</label>
+                            <input id="organizationName" class="form-control" @bind="organizationName" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="contactPerson">Contact Person</label>
+                            <input id="contactPerson" class="form-control" @bind="contactPerson" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input id="email" class="form-control" @bind="email" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="phoneNumber">Phone Number</label>
+                            <input id="phoneNumber" class="form-control" @bind="phoneNumber" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="preferences">Preferences (comma-separated)</label>
+                            <input id="preferences" class="form-control" @bind="preferencesInput" placeholder="Spanish, ASL, French" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="agencyId">Agency ID</label>
+                            <input id="agencyId" class="form-control" @bind="agencyId" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-success" @onclick="CreateClient">Add Client</button>
+                    <button class="btn btn-secondary ms-2" @onclick="CancelCreate">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Clients</h5>
+                </div>
+                <div class="card-body">
+                    @if (clients == null)
+                    {
+                        <p>Loading clients...</p>
+                    }
+                    else if (!clients.Any())
+                    {
+                        <p>No clients found.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Organization</th>
+                                        <th>Contact Person</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Preferences</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var client in clients)
+                                    {
+                                        <tr>
+                                            <td>@client.OrganizationName</td>
+                                            <td>@client.ContactPerson</td>
+                                            <td>@client.Email</td>
+                                            <td>@client.PhoneNumber</td>
+                                            <td>
+                                                @if (client.Preferences != null)
+                                                {
+                                                    @foreach (var preference in client.Preferences)
+                                                    {
+                                                        <span class="badge bg-info me-1">@preference</span>
+                                                    }
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">Active</span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => EditClient(client)">
+                                                    <span class="oi oi-pencil"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-info" @onclick="() => ViewClientAppointments(client)">
+                                                    <span class="oi oi-calendar"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteClient(client)">
+                                                    <span class="oi oi-trash"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ClientData>? clients;
+    private bool showCreateForm = false;
+    private string organizationName = "";
+    private string contactPerson = "";
+    private string email = "";
+    private string phoneNumber = "";
+    private string preferencesInput = "";
+    private string agencyId = "";
+
+    public class ClientData
+    {
+        public string OrganizationName { get; set; } = "";
+        public string ContactPerson { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+        public List<string> Preferences { get; set; } = new();
+        public string AgencyId { get; set; } = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: Load clients from API
+        await LoadClients();
+    }
+
+    private async Task LoadClients()
+    {
+        // TODO: Call API to get clients
+        clients = new List<ClientData>
+        {
+            new ClientData 
+            { 
+                OrganizationName = "ABC Corporation", 
+                ContactPerson = "Jane Smith", 
+                Email = "jane@abc.com", 
+                PhoneNumber = "555-1234",
+                Preferences = new List<string> { "Spanish", "French" },
+                AgencyId = "agency1"
+            }
+        };
+    }
+
+    private void ShowCreateForm()
+    {
+        showCreateForm = true;
+        organizationName = "";
+        contactPerson = "";
+        email = "";
+        phoneNumber = "";
+        preferencesInput = "";
+        agencyId = "";
+    }
+
+    private void CancelCreate()
+    {
+        showCreateForm = false;
+    }
+
+    private async Task CreateClient()
+    {
+        if (!string.IsNullOrEmpty(organizationName))
+        {
+            var preferences = !string.IsNullOrEmpty(preferencesInput) 
+                ? preferencesInput.Split(',').Select(s => s.Trim()).ToList() 
+                : new List<string>();
+            
+            clients?.Add(new ClientData
+            {
+                OrganizationName = organizationName,
+                ContactPerson = contactPerson,
+                Email = email,
+                PhoneNumber = phoneNumber,
+                Preferences = preferences,
+                AgencyId = agencyId
+            });
+        }
+        
+        showCreateForm = false;
+        await LoadClients();
+    }
+
+    private void EditClient(ClientData client)
+    {
+        // TODO: Implement edit functionality
+    }
+
+    private void ViewClientAppointments(ClientData client)
+    {
+        // TODO: Show client appointments
+    }
+
+    private async Task DeleteClient(ClientData client)
+    {
+        clients?.Remove(client);
+        await LoadClients();
+    }
+}

@@ -1,0 +1,278 @@
+@page "/billing"
+
+<PageTitle>Billing - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <h2>Billing & Invoices</h2>
+    
+    <div class="row mb-3">
+        <div class="col">
+            <button class="btn btn-primary" @onclick="ShowCreateInvoiceForm">
+                <span class="oi oi-plus"></span> Create New Invoice
+            </button>
+        </div>
+    </div>
+
+    @if (showCreateInvoiceForm)
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Create New Invoice</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="appointmentId">Appointment ID</label>
+                            <input id="appointmentId" class="form-control" @bind="appointmentId" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="clientId">Client ID</label>
+                            <input id="clientId" class="form-control" @bind="clientId" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="amount">Amount</label>
+                            <input id="amount" class="form-control" @bind="amount" type="number" step="0.01" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="dueDate">Due Date</label>
+                            <input id="dueDate" class="form-control" @bind="dueDate" type="date" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-success" @onclick="CreateInvoice">Create Invoice</button>
+                    <button class="btn btn-secondary ms-2" @onclick="CancelCreateInvoice">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Invoices</h5>
+                </div>
+                <div class="card-body">
+                    @if (invoices == null)
+                    {
+                        <p>Loading invoices...</p>
+                    }
+                    else if (!invoices.Any())
+                    {
+                        <p>No invoices found.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice ID</th>
+                                        <th>Appointment</th>
+                                        <th>Client</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>QuickBooks ID</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var invoice in invoices)
+                                    {
+                                        <tr>
+                                            <td>@invoice.Id</td>
+                                            <td>@invoice.AppointmentId</td>
+                                            <td>@invoice.ClientId</td>
+                                            <td>$@invoice.Amount.ToString("F2")</td>
+                                            <td>
+                                                <span class="badge @GetInvoiceStatusBadgeClass(invoice.Status)">
+                                                    @invoice.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(invoice.QuickBooksInvoiceId))
+                                                {
+                                                    <span class="text-success">@invoice.QuickBooksInvoiceId</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">Not synced</span>
+                                                }
+                                            </td>
+                                            <td>@invoice.CreatedAt.ToShortDateString()</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewInvoice(invoice)">
+                                                    <span class="oi oi-eye"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success" @onclick="() => SendInvoice(invoice)">
+                                                    <span class="oi oi-envelope-closed"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-info" @onclick="() => MarkAsPaid(invoice)">
+                                                    <span class="oi oi-check"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Billing Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <h6>Total Invoices</h6>
+                            <p class="h4">@(invoices?.Count ?? 0)</p>
+                        </div>
+                        <div class="col-6">
+                            <h6>Total Amount</h6>
+                            <p class="h4 text-success">$@(invoices?.Sum(i => i.Amount).ToString("F2") ?? "0.00")</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <h6>Paid</h6>
+                            <p class="h5 text-success">$@(invoices?.Where(i => i.Status == "Paid").Sum(i => i.Amount).ToString("F2") ?? "0.00")</p>
+                        </div>
+                        <div class="col-6">
+                            <h6>Outstanding</h6>
+                            <p class="h5 text-warning">$@(invoices?.Where(i => i.Status == "Sent").Sum(i => i.Amount).ToString("F2") ?? "0.00")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>QuickBooks Integration</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Status:</strong> Connected
+                    </div>
+                    <p>Invoices are automatically synced with QuickBooks Online for seamless billing and payment processing.</p>
+                    <button class="btn btn-outline-primary">View QuickBooks Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<InvoiceData>? invoices;
+    private bool showCreateInvoiceForm = false;
+    private string appointmentId = "";
+    private string clientId = "";
+    private decimal amount = 0;
+    private DateTime dueDate = DateTime.Now.AddDays(30);
+
+    public class InvoiceData
+    {
+        public string Id { get; set; } = "";
+        public string AppointmentId { get; set; } = "";
+        public string ClientId { get; set; } = "";
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "Draft";
+        public string QuickBooksInvoiceId { get; set; } = "";
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInvoices();
+    }
+
+    private async Task LoadInvoices()
+    {
+        // TODO: Call API to get invoices
+        invoices = new List<InvoiceData>();
+    }
+
+    private void ShowCreateInvoiceForm()
+    {
+        showCreateInvoiceForm = true;
+        appointmentId = "";
+        clientId = "";
+        amount = 0;
+        dueDate = DateTime.Now.AddDays(30);
+    }
+
+    private void CancelCreateInvoice()
+    {
+        showCreateInvoiceForm = false;
+    }
+
+    private async Task CreateInvoice()
+    {
+        if (!string.IsNullOrEmpty(appointmentId) && !string.IsNullOrEmpty(clientId) && amount > 0)
+        {
+            invoices?.Add(new InvoiceData
+            {
+                Id = Guid.NewGuid().ToString(),
+                AppointmentId = appointmentId,
+                ClientId = clientId,
+                Amount = amount,
+                Status = "Draft",
+                CreatedAt = DateTime.Now
+            });
+        }
+        showCreateInvoiceForm = false;
+        await LoadInvoices();
+    }
+
+    private void ViewInvoice(InvoiceData invoice)
+    {
+        // TODO: Show invoice details
+    }
+
+    private async Task SendInvoice(InvoiceData invoice)
+    {
+        // TODO: Call API to send invoice
+        invoice.Status = "Sent";
+        await LoadInvoices();
+    }
+
+    private async Task MarkAsPaid(InvoiceData invoice)
+    {
+        // TODO: Call API to mark invoice as paid
+        invoice.Status = "Paid";
+        await LoadInvoices();
+    }
+
+    private string GetInvoiceStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Draft" => "bg-secondary",
+            "Sent" => "bg-warning",
+            "Paid" => "bg-success",
+            "Overdue" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

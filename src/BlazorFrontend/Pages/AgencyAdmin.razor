@@ -1,0 +1,863 @@
+@page "/agency-admin"
+@inject IAgencyService AgencyService
+@inject IStaffService StaffService
+@inject ILogger<AgencyAdmin> Logger
+
+<PageTitle>Agency Administration - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>Agency Administration Dashboard</h2>
+            <p class="lead">Manage your interpreting agency operations, staff, and performance</p>
+        </div>
+    </div>
+
+    <!-- Agency Overview Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">Total Staff</h4>
+                            <h2 class="mb-0">@(agencyStats?.TotalStaff ?? 0)</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <span class="oi oi-people" style="font-size: 2rem;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">Active Interpreters</h4>
+                            <h2 class="mb-0">@(agencyStats?.ActiveInterpreters ?? 0)</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <span class="oi oi-person" style="font-size: 2rem;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">Total Clients</h4>
+                            <h2 class="mb-0">@(agencyStats?.TotalClients ?? 0)</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <span class="oi oi-briefcase" style="font-size: 2rem;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">Monthly Revenue</h4>
+                            <h2 class="mb-0">$@(agencyStats?.MonthlyRevenue.ToString("F0") ?? "0")</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <span class="oi oi-dollar" style="font-size: 2rem;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="row mb-3">
+            <div class="col">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @successMessage
+                    <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="row mb-3">
+            <div class="col">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-primary w-100 mb-2" @onclick="ShowAddStaffForm">
+                                <span class="oi oi-plus"></span><br>Add Staff
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-success w-100 mb-2" @onclick="ShowAddInterpreterForm">
+                                <span class="oi oi-person"></span><br>Add Interpreter
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-info w-100 mb-2" @onclick="ShowAddClientForm">
+                                <span class="oi oi-briefcase"></span><br>Add Client
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-warning w-100 mb-2" @onclick="ShowCreateInvoiceForm">
+                                <span class="oi oi-dollar"></span><br>Create Invoice
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-secondary w-100 mb-2" @onclick="ShowSendNotificationForm">
+                                <span class="oi oi-envelope-closed"></span><br>Send Notification
+                            </button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-dark w-100 mb-2" @onclick="GenerateAgencyReport">
+                                <span class="oi oi-document"></span><br>Generate Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Staff Form -->
+    @if (showAddStaffForm)
+    {
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Add New Staff Member</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffName">Full Name</label>
+                                    <input id="staffName" class="form-control" @bind="newStaff.FullName" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffEmail">Email</label>
+                                    <input id="staffEmail" class="form-control" @bind="newStaff.Email" type="email" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffRole">Role</label>
+                                    <select id="staffRole" class="form-control" @bind="newStaff.Role">
+                                        <option value="">Select Role</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Scheduler">Scheduler</option>
+                                        <option value="Accountant">Accountant</option>
+                                        <option value="Coordinator">Coordinator</option>
+                                        <option value="Interpreter">Interpreter</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffPhone">Phone</label>
+                                    <input id="staffPhone" class="form-control" @bind="newStaff.Phone" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffHireDate">Hire Date</label>
+                                    <input id="staffHireDate" class="form-control" @bind="newStaff.HireDate" type="date" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffHourlyRate">Hourly Rate (if applicable)</label>
+                                    <input id="staffHourlyRate" class="form-control" @bind="newStaff.HourlyRate" type="number" step="0.01" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success" @onclick="AddStaff">Add Staff Member</button>
+                            <button class="btn btn-secondary ms-2" @onclick="CancelAddStaff">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Add Interpreter Form -->
+    @if (showAddInterpreterForm)
+    {
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Add New Interpreter</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="interpreterName">Full Name</label>
+                                    <input id="interpreterName" class="form-control" @bind="newInterpreter.FullName" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="interpreterEmail">Email</label>
+                                    <input id="interpreterEmail" class="form-control" @bind="newInterpreter.Email" type="email" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="interpreterPhone">Phone</label>
+                                    <input id="interpreterPhone" class="form-control" @bind="newInterpreter.Phone" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="interpreterLanguages">Languages (comma-separated)</label>
+                                    <input id="interpreterLanguages" class="form-control" @bind="interpreterLanguagesInput" placeholder="Spanish, French, ASL" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="interpreterSpecializations">Specializations</label>
+                                    <input id="interpreterSpecializations" class="form-control" @bind="newInterpreter.Specializations" placeholder="Medical, Legal, Educational" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="interpreterHourlyRate">Hourly Rate</label>
+                                    <input id="interpreterHourlyRate" class="form-control" @bind="newInterpreter.HourlyRate" type="number" step="0.01" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success" @onclick="AddInterpreter">Add Interpreter</button>
+                            <button class="btn btn-secondary ms-2" @onclick="CancelAddInterpreter">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Add Client Form -->
+    @if (showAddClientForm)
+    {
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Add New Client</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="clientOrganization">Organization Name</label>
+                                    <input id="clientOrganization" class="form-control" @bind="newClient.OrganizationName" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="clientContactPerson">Contact Person</label>
+                                    <input id="clientContactPerson" class="form-control" @bind="newClient.ContactPerson" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="clientEmail">Email</label>
+                                    <input id="clientEmail" class="form-control" @bind="newClient.Email" type="email" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="clientPhone">Phone</label>
+                                    <input id="clientPhone" class="form-control" @bind="newClient.Phone" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="clientLanguages">Preferred Languages</label>
+                                    <input id="clientLanguages" class="form-control" @bind="clientLanguagesInput" placeholder="Spanish, French, ASL" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="clientBillingAddress">Billing Address</label>
+                                    <textarea id="clientBillingAddress" class="form-control" @bind="newClient.BillingAddress" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success" @onclick="AddClient">Add Client</button>
+                            <button class="btn btn-secondary ms-2" @onclick="CancelAddClient">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Create Invoice Form -->
+    @if (showCreateInvoiceForm)
+    {
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Create New Invoice</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="invoiceClient">Client</label>
+                                    <select id="invoiceClient" class="form-control" @bind="newInvoice.ClientId">
+                                        <option value="">Select Client</option>
+                                        @if (clients != null)
+                                        {
+                                            @foreach (var client in clients)
+                                            {
+                                                <option value="@client.Id">@client.OrganizationName</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="invoiceAppointment">Appointment</label>
+                                    <select id="invoiceAppointment" class="form-control" @bind="newInvoice.AppointmentId">
+                                        <option value="">Select Appointment</option>
+                                        @if (appointments != null)
+                                        {
+                                            @foreach (var appointment in appointments)
+                                            {
+                                                <option value="@appointment.Id">@appointment.StartTime.ToShortDateString() - @appointment.Language</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="invoiceAmount">Amount</label>
+                                    <input id="invoiceAmount" class="form-control" @bind="newInvoice.Amount" type="number" step="0.01" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="invoiceDueDate">Due Date</label>
+                                    <input id="invoiceDueDate" class="form-control" @bind="newInvoice.DueDate" type="date" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="invoiceDescription">Description</label>
+                                    <input id="invoiceDescription" class="form-control" @bind="newInvoice.Description" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="invoiceNotes">Notes</label>
+                                    <textarea id="invoiceNotes" class="form-control" @bind="newInvoice.Notes" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success" @onclick="CreateInvoice">Create Invoice</button>
+                            <button class="btn btn-secondary ms-2" @onclick="CancelCreateInvoice">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Send Notification Form -->
+    @if (showSendNotificationForm)
+    {
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Send Notification</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="notificationType">Type</label>
+                                    <select id="notificationType" class="form-control" @bind="newNotification.Type">
+                                        <option value="Email">Email</option>
+                                        <option value="SMS">SMS</option>
+                                        <option value="InApp">In-App</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="notificationRecipient">Recipient</label>
+                                    <select id="notificationRecipient" class="form-control" @bind="newNotification.RecipientId">
+                                        <option value="">Select Recipient</option>
+                                        <option value="all-staff">All Staff</option>
+                                        <option value="all-interpreters">All Interpreters</option>
+                                        <option value="all-clients">All Clients</option>
+                                        @if (staff != null)
+                                        {
+                                            @foreach (var member in staff)
+                                            {
+                                                <option value="@member.Id">@member.FullName (@member.Role)</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="notificationPriority">Priority</label>
+                                    <select id="notificationPriority" class="form-control" @bind="newNotification.Priority">
+                                        <option value="Low">Low</option>
+                                        <option value="Normal">Normal</option>
+                                        <option value="High">High</option>
+                                        <option value="Urgent">Urgent</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="notificationSubject">Subject</label>
+                                    <input id="notificationSubject" class="form-control" @bind="newNotification.Subject" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="notificationScheduledTime">Scheduled Time (optional)</label>
+                                    <input id="notificationScheduledTime" class="form-control" @bind="newNotification.ScheduledTime" type="datetime-local" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="notificationMessage">Message</label>
+                                    <textarea id="notificationMessage" class="form-control" @bind="newNotification.Message" rows="4"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success" @onclick="SendNotification">Send Notification</button>
+                            <button class="btn btn-secondary ms-2" @onclick="CancelSendNotification">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Appointments</h5>
+                </div>
+                <div class="card-body">
+                    @if (recentAppointments != null && recentAppointments.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var appointment in recentAppointments.Take(5))
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">@appointment.Language</h6>
+                                        <small>@appointment.StartTime.ToShortDateString() @appointment.StartTime.ToShortTimeString()</small>
+                                    </div>
+                                    <span class="badge @GetAppointmentStatusBadgeClass(appointment.Status)">@appointment.Status</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No recent appointments</p>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Recent Invoices</h5>
+                </div>
+                <div class="card-body">
+                    @if (recentInvoices != null && recentInvoices.Any())
+                    {
+                        <div class="list-group">
+                            @foreach (var invoice in recentInvoices.Take(5))
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">$@invoice.Amount.ToString("F2")</h6>
+                                        <small>@invoice.CreatedAt.ToShortDateString()</small>
+                                    </div>
+                                    <span class="badge @GetInvoiceStatusBadgeClass(invoice.Status)">@invoice.Status</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">No recent invoices</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private AgencyStats? agencyStats;
+    private List<StaffData>? staff;
+    private List<ClientData>? clients;
+    private List<AppointmentData>? appointments;
+    private List<InvoiceData>? recentInvoices;
+    private List<AppointmentData>? recentAppointments;
+    
+    // Form visibility flags
+    private bool showAddStaffForm = false;
+    private bool showAddInterpreterForm = false;
+    private bool showAddClientForm = false;
+    private bool showCreateInvoiceForm = false;
+    private bool showSendNotificationForm = false;
+    
+    // Form data
+    private StaffData newStaff = new();
+    private InterpreterData newInterpreter = new();
+    private ClientData newClient = new();
+    private InvoiceData newInvoice = new();
+    private NotificationData newNotification = new();
+    
+    // Input helpers
+    private string interpreterLanguagesInput = "";
+    private string clientLanguagesInput = "";
+    
+    // Messages
+    private string? successMessage;
+    private string? errorMessage;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAgencyData();
+    }
+
+    private async Task LoadAgencyData()
+    {
+        try
+        {
+            // Load staff data
+            staff = await StaffService.GetStaffAsync();
+            
+            // For now, populate with sample data for other entities
+            // TODO: Create services for these entities
+            clients = new List<ClientData>
+            {
+                new ClientData { Id = "1", OrganizationName = "ABC Hospital", ContactPerson = "Dr. Wilson" },
+                new ClientData { Id = "2", OrganizationName = "XYZ Law Firm", ContactPerson = "Attorney Brown" }
+            };
+
+            appointments = new List<AppointmentData>
+            {
+                new AppointmentData { Id = "1", Language = "Spanish", StartTime = DateTime.Now.AddDays(1), Status = "Scheduled" },
+                new AppointmentData { Id = "2", Language = "ASL", StartTime = DateTime.Now.AddDays(2), Status = "Confirmed" }
+            };
+
+            recentInvoices = new List<InvoiceData>
+            {
+                new InvoiceData { Id = "1", Amount = 150.00m, Status = "Paid", CreatedAt = DateTime.Now.AddDays(-1) },
+                new InvoiceData { Id = "2", Amount = 200.00m, Status = "Sent", CreatedAt = DateTime.Now.AddDays(-2) }
+            };
+
+            recentAppointments = appointments;
+
+            // Calculate stats from loaded data
+            agencyStats = new AgencyStats
+            {
+                TotalStaff = staff?.Count ?? 0,
+                ActiveInterpreters = staff?.Count(s => s.Role == "Interpreter" && s.Status == "Active") ?? 0,
+                TotalClients = clients?.Count ?? 0,
+                MonthlyRevenue = recentInvoices?.Where(i => i.Status == "Paid").Sum(i => i.Amount) ?? 0
+            };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading agency data");
+            // Fallback to sample data if API fails
+            agencyStats = new AgencyStats
+            {
+                TotalStaff = 12,
+                ActiveInterpreters = 8,
+                TotalClients = 25,
+                MonthlyRevenue = 45000
+            };
+
+            staff = new List<StaffData>
+            {
+                new StaffData { Id = "1", FullName = "John Smith", Role = "Admin", Email = "john@agency.com" },
+                new StaffData { Id = "2", FullName = "Sarah Johnson", Role = "Scheduler", Email = "sarah@agency.com" },
+                new StaffData { Id = "3", FullName = "Mike Davis", Role = "Interpreter", Email = "mike@agency.com" }
+            };
+
+            clients = new List<ClientData>
+            {
+                new ClientData { Id = "1", OrganizationName = "ABC Hospital", ContactPerson = "Dr. Wilson" },
+                new ClientData { Id = "2", OrganizationName = "XYZ Law Firm", ContactPerson = "Attorney Brown" }
+            };
+
+            appointments = new List<AppointmentData>
+            {
+                new AppointmentData { Id = "1", Language = "Spanish", StartTime = DateTime.Now.AddDays(1), Status = "Scheduled" },
+                new AppointmentData { Id = "2", Language = "ASL", StartTime = DateTime.Now.AddDays(2), Status = "Confirmed" }
+            };
+
+            recentInvoices = new List<InvoiceData>
+            {
+                new InvoiceData { Id = "1", Amount = 150.00m, Status = "Paid", CreatedAt = DateTime.Now.AddDays(-1) },
+                new InvoiceData { Id = "2", Amount = 200.00m, Status = "Sent", CreatedAt = DateTime.Now.AddDays(-2) }
+            };
+
+            recentAppointments = appointments;
+        }
+    }
+
+    // Form visibility methods
+    private void ShowAddStaffForm() => showAddStaffForm = true;
+    private void ShowAddInterpreterForm() => showAddInterpreterForm = true;
+    private void ShowAddClientForm() => showAddClientForm = true;
+    private void ShowCreateInvoiceForm() => showCreateInvoiceForm = true;
+    private void ShowSendNotificationForm() => showSendNotificationForm = true;
+
+    private void CancelAddStaff() => showAddStaffForm = false;
+    private void CancelAddInterpreter() => showAddInterpreterForm = false;
+    private void CancelAddClient() => showAddClientForm = false;
+    private void CancelCreateInvoice() => showCreateInvoiceForm = false;
+    private void CancelSendNotification() => showSendNotificationForm = false;
+
+    // Form submission methods
+    private async Task AddStaff()
+    {
+        if (!string.IsNullOrEmpty(newStaff.FullName) && !string.IsNullOrEmpty(newStaff.Email) && !string.IsNullOrEmpty(newStaff.Role))
+        {
+            try
+            {
+                var request = new CreateStaffRequest
+                {
+                    FullName = newStaff.FullName,
+                    Email = newStaff.Email,
+                    Role = newStaff.Role,
+                    Phone = newStaff.Phone,
+                    HireDate = newStaff.HireDate,
+                    HourlyRate = newStaff.HourlyRate
+                };
+
+                var createdStaff = await StaffService.CreateStaffMemberAsync(request);
+                if (createdStaff != null)
+                {
+                    // Show success message
+                    successMessage = $"Staff member '{createdStaff.FullName}' added successfully!";
+                    
+                    // Reset form and hide
+                    newStaff = new StaffData();
+                    showAddStaffForm = false;
+                    
+                    // Reload data
+                    await LoadAgencyData();
+                    
+                    // Clear success message after delay
+                    await Task.Delay(3000);
+                    successMessage = null;
+                }
+                else
+                {
+                    errorMessage = "Failed to add staff member. Please try again.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error adding staff member");
+                errorMessage = "An error occurred while adding the staff member. Please try again.";
+            }
+        }
+        else
+        {
+            errorMessage = "Please fill in all required fields (Name, Email, and Role).";
+        }
+    }
+
+    private async Task AddInterpreter()
+    {
+        if (!string.IsNullOrEmpty(newInterpreter.FullName) && !string.IsNullOrEmpty(newInterpreter.Email))
+        {
+            // TODO: Call API to add interpreter
+            var languages = !string.IsNullOrEmpty(interpreterLanguagesInput)
+                ? interpreterLanguagesInput.Split(',').Select(s => s.Trim()).ToList()
+                : new List<string>();
+
+            staff?.Add(new StaffData
+            {
+                Id = Guid.NewGuid().ToString(),
+                FullName = newInterpreter.FullName,
+                Email = newInterpreter.Email,
+                Role = "Interpreter",
+                Phone = newInterpreter.Phone,
+                HireDate = DateTime.Now,
+                HourlyRate = newInterpreter.HourlyRate,
+                Status = "Active"
+            });
+            
+            newInterpreter = new InterpreterData();
+            interpreterLanguagesInput = "";
+            showAddInterpreterForm = false;
+            await LoadAgencyData();
+        }
+    }
+
+    private async Task AddClient()
+    {
+        if (!string.IsNullOrEmpty(newClient.OrganizationName) && !string.IsNullOrEmpty(newClient.ContactPerson))
+        {
+            // TODO: Call API to add client
+            var languages = !string.IsNullOrEmpty(clientLanguagesInput)
+                ? clientLanguagesInput.Split(',').Select(s => s.Trim()).ToList()
+                : new List<string>();
+
+            clients?.Add(new ClientData
+            {
+                Id = Guid.NewGuid().ToString(),
+                OrganizationName = newClient.OrganizationName,
+                ContactPerson = newClient.ContactPerson,
+                Email = newClient.Email,
+                Phone = newClient.Phone,
+                PreferredLanguages = languages,
+                BillingAddress = newClient.BillingAddress,
+                Status = "Active"
+            });
+            
+            newClient = new ClientData();
+            clientLanguagesInput = "";
+            showAddClientForm = false;
+            await LoadAgencyData();
+        }
+    }
+
+    private async Task CreateInvoice()
+    {
+        if (!string.IsNullOrEmpty(newInvoice.ClientId) && !string.IsNullOrEmpty(newInvoice.AppointmentId) && newInvoice.Amount > 0)
+        {
+            // TODO: Call API to create invoice
+            recentInvoices?.Add(new InvoiceData
+            {
+                Id = Guid.NewGuid().ToString(),
+                ClientId = newInvoice.ClientId,
+                AppointmentId = newInvoice.AppointmentId,
+                Amount = newInvoice.Amount,
+                Status = "Draft",
+                DueDate = newInvoice.DueDate,
+                Description = newInvoice.Description,
+                Notes = newInvoice.Notes,
+                CreatedAt = DateTime.Now
+            });
+            
+            newInvoice = new InvoiceData();
+            showCreateInvoiceForm = false;
+            await LoadAgencyData();
+        }
+    }
+
+    private async Task SendNotification()
+    {
+        if (!string.IsNullOrEmpty(newNotification.Message) && !string.IsNullOrEmpty(newNotification.RecipientId))
+        {
+            // TODO: Call API to send notification
+            newNotification = new NotificationData();
+            showSendNotificationForm = false;
+            await LoadAgencyData();
+        }
+    }
+
+    private void GenerateAgencyReport()
+    {
+        // TODO: Implement agency report generation
+    }
+
+    // Helper methods for UI
+    private string GetAppointmentStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Scheduled" => "bg-primary",
+            "Confirmed" => "bg-info",
+            "In Progress" => "bg-warning",
+            "Completed" => "bg-success",
+            "Cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetInvoiceStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Draft" => "bg-secondary",
+            "Sent" => "bg-warning",
+            "Paid" => "bg-success",
+            "Overdue" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

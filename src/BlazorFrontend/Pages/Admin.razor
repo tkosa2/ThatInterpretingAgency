@@ -1,0 +1,329 @@
+@page "/admin"
+
+<PageTitle>Admin - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <h2>System Administration</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>System Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <strong>Status:</strong> Healthy
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Database:</strong> Connected
+                    </div>
+                    <div class="alert alert-success">
+                        <strong>QuickBooks:</strong> Connected
+                    </div>
+                    <div class="alert alert-success">
+                        <strong>Notifications:</strong> Active
+                    </div>
+                    <button class="btn btn-outline-primary" @onclick="RefreshSystemStatus">
+                        <span class="oi oi-reload"></span> Refresh Status
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary" @onclick="StartMaintenance">
+                            <span class="oi oi-tools"></span> Start Maintenance
+                        </button>
+                        <button class="btn btn-outline-info" @onclick="ViewSystemLogs">
+                            <span class="oi oi-document"></span> View System Logs
+                        </button>
+                        <button class="btn btn-outline-warning" @onclick="BackupDatabase">
+                            <span class="oi oi-data-transfer-download"></span> Backup Database
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>User Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <button class="btn btn-primary" @onclick="ShowCreateUserForm">
+                                <span class="oi oi-plus"></span> Create User
+                            </button>
+                        </div>
+                    </div>
+                    
+                    @if (showCreateUserForm)
+                    {
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="userName">Username</label>
+                                            <input id="userName" class="form-control" @bind="userName" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="email">Email</label>
+                                            <input id="email" class="form-control" @bind="email" />
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="role">Role</label>
+                                            <select id="role" class="form-control" @bind="role">
+                                                <option value="Admin">Admin</option>
+                                                <option value="Interpreter">Interpreter</option>
+                                                <option value="Client">Client</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="agencyId">Agency ID</label>
+                                            <input id="agencyId" class="form-control" @bind="agencyId" />
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button class="btn btn-success" @onclick="CreateUser">Create User</button>
+                                    <button class="btn btn-secondary ms-2" @onclick="CancelCreateUser">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Agency</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (users != null)
+                                {
+                                    @foreach (var user in users)
+                                    {
+                                        <tr>
+                                            <td>@user.UserName</td>
+                                            <td>@user.Email</td>
+                                            <td>
+                                                <span class="badge bg-info">@user.Role</span>
+                                            </td>
+                                            <td>@user.AgencyId</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => EditUser(user)">
+                                                    <span class="oi oi-pencil"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteUser(user)">
+                                                    <span class="oi oi-trash"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Reports & Analytics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <h6>Total Agencies</h6>
+                            <p class="h4">@(agencies?.Count ?? 0)</p>
+                        </div>
+                        <div class="col-6">
+                            <h6>Total Users</h6>
+                            <p class="h4">@(users?.Count ?? 0)</p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-6">
+                            <h6>Active Appointments</h6>
+                            <p class="h5 text-success">@(appointments?.Count(a => a.Status == "In Progress") ?? 0)</p>
+                        </div>
+                        <div class="col-6">
+                            <h6>Total Revenue</h6>
+                            <p class="h5 text-success">$@(invoices?.Sum(i => i.Amount).ToString("F2") ?? "0.00")</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button class="btn btn-outline-primary" @onclick="GenerateAgencyReport">
+                            <span class="oi oi-document"></span> Agency Report
+                        </button>
+                        <button class="btn btn-outline-success" @onclick="GenerateRevenueReport">
+                            <span class="oi oi-dollar"></span> Revenue Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<UserData>? users;
+    private List<AgencyData>? agencies;
+    private List<AppointmentData>? appointments;
+    private List<InvoiceData>? invoices;
+    private bool showCreateUserForm = false;
+    private string userName = "";
+    private string email = "";
+    private string role = "Client";
+    private string agencyId = "";
+
+    public class UserData
+    {
+        public string Id { get; set; } = "";
+        public string UserName { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Role { get; set; } = "";
+        public string AgencyId { get; set; } = "";
+    }
+
+    public class AgencyData
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string ContactInfo { get; set; } = "";
+        public string Status { get; set; } = "";
+    }
+
+    public class AppointmentData
+    {
+        public string Id { get; set; } = "";
+        public string Status { get; set; } = "";
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+    }
+
+    public class InvoiceData
+    {
+        public string Id { get; set; } = "";
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAdminData();
+    }
+
+    private async Task LoadAdminData()
+    {
+        // TODO: Call APIs to get admin data
+        users = new List<UserData>();
+        agencies = new List<AgencyData>();
+        appointments = new List<AppointmentData>();
+        invoices = new List<InvoiceData>();
+    }
+
+    private void ShowCreateUserForm()
+    {
+        showCreateUserForm = true;
+        userName = "";
+        email = "";
+        role = "Client";
+        agencyId = "";
+    }
+
+    private void CancelCreateUser()
+    {
+        showCreateUserForm = false;
+    }
+
+    private async Task CreateUser()
+    {
+        if (!string.IsNullOrEmpty(userName) && !string.IsNullOrEmpty(email))
+        {
+            users?.Add(new UserData
+            {
+                Id = Guid.NewGuid().ToString(),
+                UserName = userName,
+                Email = email,
+                Role = role,
+                AgencyId = agencyId
+            });
+        }
+        showCreateUserForm = false;
+        await LoadAdminData();
+    }
+
+    private void EditUser(UserData user)
+    {
+        // TODO: Implement edit functionality
+    }
+
+    private async Task DeleteUser(UserData user)
+    {
+        // TODO: Call API to delete user
+        users?.Remove(user);
+        await LoadAdminData();
+    }
+
+    private async Task RefreshSystemStatus()
+    {
+        // TODO: Call API to refresh system status
+        await LoadAdminData();
+    }
+
+    private void StartMaintenance()
+    {
+        // TODO: Implement maintenance mode
+    }
+
+    private void ViewSystemLogs()
+    {
+        // TODO: Show system logs
+    }
+
+    private void BackupDatabase()
+    {
+        // TODO: Implement database backup
+    }
+
+    private void GenerateAgencyReport()
+    {
+        // TODO: Generate agency report
+    }
+
+    private void GenerateRevenueReport()
+    {
+        // TODO: Generate revenue report
+    }
+}

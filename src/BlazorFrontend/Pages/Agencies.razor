@@ -1,0 +1,154 @@
+@page "/agencies"
+@using ThatInterpretingAgency.Core.DTOs
+@using BlazorFrontend.Services
+@inject IAgencyService AgencyService
+@inject NavigationManager Navigation
+@inject ILogger<Agencies> Logger
+
+<PageTitle>Agencies - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <h2>Manage Agencies</h2>
+    
+    <div class="row mb-3">
+        <div class="col">
+            <a href="/create-agency" class="btn btn-primary">
+                <span class="oi oi-plus"></span> Create New Agency
+            </a>
+        </div>
+    </div>
+
+
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Agencies</h5>
+                </div>
+                <div class="card-body">
+                    @if (isLoading)
+                    {
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2">Loading agencies...</p>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            @errorMessage
+                            <button class="btn btn-sm btn-outline-danger ms-2" @onclick="LoadAgencies">Retry</button>
+                        </div>
+                    }
+                    else if (agencies == null || !agencies.Any())
+                    {
+                        <p class="text-muted">No agencies found.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Contact Info</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var agency in agencies)
+                                    {
+                                        <tr>
+                                            <td>@agency.Name</td>
+                                            <td>@agency.ContactInfo</td>
+                                            <td>@agency.Email</td>
+                                            <td>@agency.Phone</td>
+                                            <td>
+                                                <span class="badge bg-@(agency.Status == "Active" ? "success" : "secondary")">@agency.Status</span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-info" @onclick="() => ViewAgency(agency)" title="View">
+                                                    <span class="oi oi-eye"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => EditAgency(agency)" title="Edit">
+                                                    <span class="oi oi-pencil"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteAgency(agency)" title="Delete">
+                                                    <span class="oi oi-trash"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<AgencyData>? agencies;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAgencies();
+    }
+
+    private async Task LoadAgencies()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            agencies = await AgencyService.GetAgenciesAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading agencies");
+            errorMessage = "Failed to load agencies. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteAgency(AgencyData agency)
+    {
+        try
+        {
+            var success = await AgencyService.DeleteAgencyAsync(agency.Id);
+            if (success)
+            {
+                await LoadAgencies();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error deleting agency {AgencyId}", agency.Id);
+            errorMessage = "Failed to delete agency. Please try again.";
+        }
+    }
+
+    private void EditAgency(AgencyData agency)
+    {
+        Navigation.NavigateTo($"/edit-agency/{agency.Id}");
+    }
+
+    private void ViewAgency(AgencyData agency)
+    {
+        Navigation.NavigateTo($"/agency-details/{agency.Id}");
+    }
+}

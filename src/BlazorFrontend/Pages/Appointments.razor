@@ -1,0 +1,239 @@
+@page "/appointments"
+
+<PageTitle>Appointments - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <h2>Manage Appointments</h2>
+    
+    <div class="row mb-3">
+        <div class="col">
+            <button class="btn btn-primary" @onclick="ShowBookingForm">
+                <span class="oi oi-plus"></span> Book New Appointment
+            </button>
+        </div>
+    </div>
+
+    @if (showBookingForm)
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Book New Appointment</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="clientId">Client ID</label>
+                            <input id="clientId" class="form-control" @bind="clientId" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="interpreterId">Interpreter ID</label>
+                            <input id="interpreterId" class="form-control" @bind="interpreterId" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="startTime">Start Time</label>
+                            <input id="startTime" class="form-control" type="datetime-local" @bind="startTime" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="endTime">End Time</label>
+                            <input id="endTime" class="form-control" type="datetime-local" @bind="endTime" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input id="location" class="form-control" @bind="location" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="language">Language</label>
+                            <input id="language" class="form-control" @bind="language" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-success" @onclick="BookAppointment">Book Appointment</button>
+                    <button class="btn btn-secondary ms-2" @onclick="CancelBooking">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Appointments</h5>
+                </div>
+                <div class="card-body">
+                    @if (appointments == null)
+                    {
+                        <p>Loading appointments...</p>
+                    }
+                    else if (!appointments.Any())
+                    {
+                        <p>No appointments found.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Interpreter</th>
+                                        <th>Date & Time</th>
+                                        <th>Location</th>
+                                        <th>Language</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in appointments)
+                                    {
+                                        <tr>
+                                            <td>@appointment.ClientId</td>
+                                            <td>@appointment.InterpreterId</td>
+                                            <td>
+                                                @appointment.StartTime.ToShortDateString()<br/>
+                                                <small>@appointment.StartTime.ToShortTimeString() - @appointment.EndTime.ToShortTimeString()</small>
+                                            </td>
+                                            <td>@appointment.Location</td>
+                                            <td>@appointment.Language</td>
+                                            <td>
+                                                <span class="badge @GetStatusBadgeClass(appointment.Status)">
+                                                    @appointment.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => EditAppointment(appointment)">
+                                                    <span class="oi oi-pencil"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-success" @onclick="() => StartAppointment(appointment)">
+                                                    <span class="oi oi-play-circle"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => CancelAppointment(appointment)">
+                                                    <span class="oi oi-x"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<AppointmentData>? appointments;
+    private bool showBookingForm = false;
+    private string clientId = "";
+    private string interpreterId = "";
+    private DateTime startTime = DateTime.Now.AddDays(1);
+    private DateTime endTime = DateTime.Now.AddDays(1).AddHours(1);
+    private string location = "";
+    private string language = "";
+
+    public class AppointmentData
+    {
+        public string ClientId { get; set; } = "";
+        public string InterpreterId { get; set; } = "";
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string Location { get; set; } = "";
+        public string Language { get; set; } = "";
+        public string Status { get; set; } = "Scheduled";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: Load appointments from API
+        await LoadAppointments();
+    }
+
+    private async Task LoadAppointments()
+    {
+        // TODO: Call API to get appointments
+        appointments = new List<AppointmentData>();
+    }
+
+    private void ShowBookingForm()
+    {
+        showBookingForm = true;
+        startTime = DateTime.Now.AddDays(1);
+        endTime = DateTime.Now.AddDays(1).AddHours(1);
+    }
+
+    private void CancelBooking()
+    {
+        showBookingForm = false;
+    }
+
+    private async Task BookAppointment()
+    {
+        if (!string.IsNullOrEmpty(clientId) && !string.IsNullOrEmpty(interpreterId))
+        {
+            appointments?.Add(new AppointmentData
+            {
+                ClientId = clientId,
+                InterpreterId = interpreterId,
+                StartTime = startTime,
+                EndTime = endTime,
+                Location = location,
+                Language = language,
+                Status = "Scheduled"
+            });
+        }
+        
+        showBookingForm = false;
+        await LoadAppointments();
+    }
+
+    private void EditAppointment(AppointmentData appointment)
+    {
+        // TODO: Implement edit functionality
+    }
+
+    private async Task StartAppointment(AppointmentData appointment)
+    {
+        appointment.Status = "In Progress";
+        await LoadAppointments();
+    }
+
+    private async Task CancelAppointment(AppointmentData appointment)
+    {
+        appointment.Status = "Cancelled";
+        await LoadAppointments();
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Scheduled" => "bg-primary",
+            "In Progress" => "bg-warning",
+            "Completed" => "bg-success",
+            "Cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

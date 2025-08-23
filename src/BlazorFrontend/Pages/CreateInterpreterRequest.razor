@@ -1,0 +1,275 @@
+@page "/create-interpreter-request"
+@using ThatInterpretingAgency.Core.DTOs
+@using BlazorFrontend.Services
+@inject IInterpreterRequestService InterpreterRequestService
+@inject NavigationManager Navigation
+@inject ILogger<CreateInterpreterRequest> Logger
+
+<PageTitle>Create Interpreter Request - THAT Interpreting Agency</PageTitle>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-language me-2"></i>
+                        Create Interpreter Request
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@request" OnValidSubmit="HandleValidSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="appointmentType" class="form-label">Appointment Type *</label>
+                                <InputSelect id="appointmentType" class="form-control" @bind-Value="request.AppointmentType">
+                                    <option value="">Select Type</option>
+                                    <option value="In-Person">In-Person</option>
+                                    <option value="Virtual">Virtual</option>
+                                </InputSelect>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="language" class="form-label">Language *</label>
+                                <InputText id="language" class="form-control" @bind-Value="request.Language" placeholder="e.g., Spanish, French, ASL" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="requestedDate" class="form-label">Requested Date *</label>
+                                <InputDate id="requestedDate" class="form-control" @bind-Value="request.RequestedDate" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="mode" class="form-label">Mode</label>
+                                <InputSelect id="mode" class="form-control" @bind-Value="request.Mode">
+                                    <option value="">Select Mode</option>
+                                    <option value="Consecutive">Consecutive</option>
+                                    <option value="Simultaneous">Simultaneous</option>
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="startTime" class="form-label">Start Time *</label>
+                                <InputText id="startTime" type="time" class="form-control" @bind-Value="startTimeString" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="endTime" class="form-label">End Time *</label>
+                                <InputText id="endTime" type="time" class="form-control" @bind-Value="endTimeString" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="division" class="form-label">Division</label>
+                                <InputText id="division" class="form-control" @bind-Value="request.Division" placeholder="e.g., Healthcare, Legal Services" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="program" class="form-label">Program</label>
+                                <InputText id="program" class="form-control" @bind-Value="request.Program" placeholder="e.g., Patient Care, Court Proceedings" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="location" class="form-label">Location</label>
+                                <InputText id="location" class="form-control" @bind-Value="request.Location" placeholder="Physical location or virtual meeting details" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="virtualMeetingLink" class="form-label">Virtual Meeting Link</label>
+                                <InputText id="virtualMeetingLink" class="form-control" @bind-Value="request.VirtualMeetingLink" placeholder="https://meet.google.com/..." />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dayOfEventContact" class="form-label">Day of Event Contact</label>
+                                <InputText id="dayOfEventContact" class="form-control" @bind-Value="request.DayOfEventContact" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dayOfEventContactPhone" class="form-label">Contact Phone</label>
+                                <InputText id="dayOfEventContactPhone" class="form-control" @bind-Value="request.DayOfEventContactPhone" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="costCode" class="form-label">Cost Code</label>
+                                <InputText id="costCode" class="form-control" @bind-Value="request.CostCode" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="invoiceApprover" class="form-label">Invoice Approver</label>
+                                <InputText id="invoiceApprover" class="form-control" @bind-Value="request.InvoiceApprover" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description *</label>
+                            <InputTextArea id="description" class="form-control" rows="3" @bind-Value="request.Description" placeholder="Detailed description of the interpreting needs..." />
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="specialInstructions" class="form-label">Special Instructions</label>
+                            <InputTextArea id="specialInstructions" class="form-control" rows="2" @bind-Value="request.SpecialInstructions" placeholder="Any special requirements or instructions..." />
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <InputCheckbox id="supportingMaterials" class="form-check-input" @bind-Value="request.SupportingMaterials" />
+                                <label class="form-check-label" for="supportingMaterials">
+                                    Supporting Materials Available
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" @onclick="GoBack">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Back
+                            </button>
+                            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Creating...</span>
+                                }
+                                else
+                                {
+                                    <i class="fas fa-save me-2"></i>
+                                    <span>Create Request</span>
+                                }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @successMessage
+                    <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private CreateInterpreterRequestRequest request = new();
+    private bool isSubmitting = false;
+    private string? successMessage;
+    private string? errorMessage;
+    
+    // Time input strings
+    private string startTimeString = "09:00";
+    private string endTimeString = "11:00";
+
+    protected override void OnInitialized()
+    {
+        // Set default values
+        request.RequestedDate = DateTime.Today.AddDays(7);
+        request.StartTime = DateTime.Today.AddDays(7).AddHours(9);
+        request.EndTime = DateTime.Today.AddDays(7).AddHours(11);
+        request.AgencyId = "1"; // TODO: Get from user claims
+        request.RequestorId = "1"; // TODO: Get from user claims
+        
+        // Set default time strings
+        startTimeString = "09:00";
+        endTimeString = "11:00";
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+            successMessage = null;
+
+            // Basic validation
+            if (string.IsNullOrWhiteSpace(request.AppointmentType))
+            {
+                errorMessage = "Appointment type is required.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Language))
+            {
+                errorMessage = "Language is required.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Description))
+            {
+                errorMessage = "Description is required.";
+                return;
+            }
+
+            // Parse time strings and validate
+            if (!TimeSpan.TryParse(startTimeString, out var startTime) || !TimeSpan.TryParse(endTimeString, out var endTime))
+            {
+                errorMessage = "Please enter valid start and end times.";
+                return;
+            }
+
+            if (startTime >= endTime)
+            {
+                errorMessage = "End time must be after start time.";
+                return;
+            }
+
+            // Combine date and time
+            request.StartTime = request.RequestedDate.Date.Add(startTime);
+            request.EndTime = request.RequestedDate.Date.Add(endTime);
+
+            // Call the service to create the request
+            var createdRequest = await InterpreterRequestService.CreateInterpreterRequestAsync(request);
+
+            if (createdRequest != null)
+            {
+                successMessage = $"Interpreter request created successfully! Request ID: {createdRequest.Id}";
+                
+                // Clear the form
+                request = new();
+                OnInitialized(); // Reset default values
+                
+                // Redirect to requests list after a short delay
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/interpreter-requests");
+            }
+            else
+            {
+                errorMessage = "Failed to create interpreter request. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating interpreter request");
+            errorMessage = "An error occurred while creating the interpreter request. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/interpreter-requests");
+    }
+}

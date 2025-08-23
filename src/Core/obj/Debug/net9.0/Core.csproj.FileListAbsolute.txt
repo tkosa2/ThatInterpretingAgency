@@ -1,0 +1,12 @@
+C:\projects\ThatInterpretingAgency\src\Core\obj\Debug\net9.0\Core.csproj.AssemblyReference.cache
+C:\projects\ThatInterpretingAgency\src\Core\obj\Debug\net9.0\Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\projects\ThatInterpretingAgency\src\Core\obj\Debug\net9.0\Core.AssemblyInfoInputs.cache
+C:\projects\ThatInterpretingAgency\src\Core\obj\Debug\net9.0\Core.AssemblyInfo.cs
+C:\projects\ThatInterpretingAgency\src\Core\obj\Debug\net9.0\Core.csproj.CoreCompileInputs.cache
+C:\projects\ThatInterpretingAgency\src\Core\bin\Debug\net9.0\Core.deps.json
+C:\projects\ThatInterpretingAgency\src\Core\bin\Debug\net9.0\Core.dll
+C:\projects\ThatInterpretingAgency\src\Core\bin\Debug\net9.0\Core.pdb
+C:\projects\ThatInterpretingAgency\src\Core\obj\Debug\net9.0\Core.dll
+C:\projects\ThatInterpretingAgency\src\Core\obj\Debug\net9.0\refint\Core.dll
+C:\projects\ThatInterpretingAgency\src\Core\obj\Debug\net9.0\Core.pdb
+C:\projects\ThatInterpretingAgency\src\Core\obj\Debug\net9.0\ref\Core.dll

@@ -1,0 +1,471 @@
+@page "/interpreter-requests"
+@using ThatInterpretingAgency.Core.DTOs
+@using BlazorFrontend.Services
+@inject IInterpreterRequestService InterpreterRequestService
+@inject ILogger<InterpreterRequests> Logger
+
+<PageTitle>Interpreter Requests - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-language me-2"></i>
+            Interpreter Requests
+        </h2>
+        <a href="/create-interpreter-request" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>
+            Create New Request
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="statusFilter" class="form-label">Status</label>
+                    <InputSelect id="statusFilter" class="form-control" @bind-Value="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Fulfilled">Fulfilled</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </InputSelect>
+                </div>
+                <div class="col-md-3">
+                    <label for="languageFilter" class="form-label">Language</label>
+                    <InputText id="languageFilter" class="form-control" @bind-Value="languageFilter" placeholder="Filter by language" />
+                </div>
+                <div class="col-md-3">
+                    <label for="dateFilter" class="form-label">From Date</label>
+                    <InputDate id="dateFilter" class="form-control" @bind-Value="fromDate" />
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary me-2" @onclick="ApplyFilters">
+                        <i class="fas fa-filter me-2"></i>
+                        Apply Filters
+                    </button>
+                    <button class="btn btn-outline-secondary" @onclick="ClearFilters">
+                        <i class="fas fa-times me-2"></i>
+                        Clear
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading interpreter requests...</p>
+        </div>
+    }
+    <!-- Error State -->
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @errorMessage
+            <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+        </div>
+    }
+    <!-- No Requests State -->
+    else if (requests == null || !requests.Any())
+    {
+        <div class="text-center py-5">
+            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No Interpreter Requests Found</h4>
+            <p class="text-muted">Get started by creating your first interpreter request.</p>
+            <a href="/create-interpreter-request" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>
+                Create Request
+            </a>
+        </div>
+    }
+    <!-- Requests Table -->
+    else
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Language</th>
+                                <th>Date & Time</th>
+                                <th>Location</th>
+                                <th>Requestor</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (requests != null)
+                            {
+                                @foreach (var request in requests)
+                            {
+                                <tr>
+                                    <td>
+                                        <small class="text-muted">@request.Id</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge @(request.AppointmentType == "Virtual" ? "bg-info" : "bg-secondary")">
+                                            @request.AppointmentType
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>@request.Language</strong>
+                                        @if (!string.IsNullOrEmpty(request.Mode))
+                                        {
+                                            <br><small class="text-muted">@(request.Mode ?? "")</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>@request.RequestedDate.ToString("MMM dd, yyyy")</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                @request.StartTime.ToString("HH:mm") - @request.EndTime.ToString("HH:mm")
+                                            </small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (request.AppointmentType == "Virtual")
+                                        {
+                                            <span class="text-info">
+                                                <i class="fas fa-video me-1"></i>
+                                                Virtual
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-secondary">
+                                                <i class="fas fa-map-marker-alt me-1"></i>
+                                                @(string.IsNullOrEmpty(request.Location) ? "TBD" : request.Location)
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <strong>@(request.RequestorName ?? "Unknown")</strong>
+                                            @if (!string.IsNullOrEmpty(request.OrganizationName))
+                                            {
+                                                <br><small class="text-muted">@request.OrganizationName</small>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var statusClass = request.Status switch
+                                            {
+                                                "Pending" => "bg-warning",
+                                                "Approved" => "bg-success",
+                                                "Rejected" => "bg-danger",
+                                                "Fulfilled" => "bg-info",
+                                                "Cancelled" => "bg-secondary",
+                                                _ => "bg-secondary"
+                                            };
+                                        }
+                                        <span class="badge @statusClass">@request.Status</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewRequest(request)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            @if (request.Status == "Pending")
+                                            {
+                                                <button class="btn btn-sm btn-outline-success" @onclick="() => ApproveRequest(request)">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => RejectRequest(request)">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            }
+                                            @if (request.Status == "Pending" || request.Status == "Approved")
+                                            {
+                                                <button class="btn btn-sm btn-outline-warning" @onclick="() => CancelRequest(request)">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Request Details Modal -->
+@if (selectedRequest != null)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-language me-2"></i>
+                        Request Details
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Basic Information</h6>
+                            <dl class="row">
+                                <dt class="col-sm-4">Request ID:</dt>
+                                <dd class="col-sm-8">@selectedRequest.Id</dd>
+                                
+                                <dt class="col-sm-4">Type:</dt>
+                                <dd class="col-sm-8">@selectedRequest.AppointmentType</dd>
+                                
+                                <dt class="col-sm-4">Language:</dt>
+                                <dd class="col-sm-8">@selectedRequest.Language</dd>
+                                
+                                <dt class="col-sm-4">Mode:</dt>
+                                <dd class="col-sm-8">@(selectedRequest.Mode ?? "Not specified")</dd>
+                                
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge @(selectedRequest.Status == "Pending" ? "bg-warning" : 
+                                                      selectedRequest.Status == "Approved" ? "bg-success" : 
+                                                      selectedRequest.Status == "Rejected" ? "bg-danger" : 
+                                                      selectedRequest.Status == "Fulfilled" ? "bg-info" : "bg-secondary")">
+                                        @selectedRequest.Status
+                                    </span>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Schedule</h6>
+                            <dl class="row">
+                                <dt class="col-sm-4">Date:</dt>
+                                <dd class="col-sm-8">@selectedRequest.RequestedDate.ToString("MMM dd, yyyy")</dd>
+                                
+                                <dt class="col-sm-4">Time:</dt>
+                                <dd class="col-sm-8">@selectedRequest.StartTime.ToString("HH:mm") - @selectedRequest.EndTime.ToString("HH:mm")</dd>
+                                
+                                <dt class="col-sm-4">Location:</dt>
+                                <dd class="col-sm-8">
+                                    @if (selectedRequest.AppointmentType == "Virtual")
+                                    {
+                                        <a href="@selectedRequest.VirtualMeetingLink" target="_blank" class="text-info">
+                                            <i class="fas fa-external-link-alt me-1"></i>
+                                            Virtual Meeting
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        @(string.IsNullOrEmpty(selectedRequest.Location) ? "TBD" : selectedRequest.Location)
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <h6>Description</h6>
+                            <p>@selectedRequest.Description</p>
+                            
+                            @if (!string.IsNullOrEmpty(selectedRequest.SpecialInstructions))
+                            {
+                                <h6>Special Instructions</h6>
+                                <p>@selectedRequest.SpecialInstructions</p>
+                            }
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6>Organization Details</h6>
+                            <dl class="row">
+                                <dt class="col-sm-4">Division:</dt>
+                                <dd class="col-sm-8">@(selectedRequest.Division ?? "Not specified")</dd>
+                                
+                                <dt class="col-sm-4">Program:</dt>
+                                <dd class="col-sm-8">@(selectedRequest.Program ?? "Not specified")</dd>
+                                
+                                <dt class="col-sm-4">Cost Code:</dt>
+                                <dd class="col-sm-8">@(selectedRequest.CostCode ?? "Not specified")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Contact Information</h6>
+                            <dl class="row">
+                                <dt class="col-sm-4">Day Contact:</dt>
+                                <dd class="col-sm-8">@(selectedRequest.DayOfEventContact ?? "Not specified")</dd>
+                                
+                                <dt class="col-sm-4">Contact Phone:</dt>
+                                <dd class="col-sm-8">@(selectedRequest.DayOfEventContactPhone ?? "Not specified")</dd>
+                                
+                                <dt class="col-sm-4">Invoice Approver:</dt>
+                                <dd class="col-sm-8">@(selectedRequest.InvoiceApprover ?? "Not specified")</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Close</button>
+                    @if (selectedRequest.Status == "Pending")
+                    {
+                        <button type="button" class="btn btn-success" @onclick="() => ApproveRequest(selectedRequest)">
+                            <i class="fas fa-check me-2"></i>Approve
+                        </button>
+                        <button type="button" class="btn btn-danger" @onclick="() => RejectRequest(selectedRequest)">
+                            <i class="fas fa-times me-2"></i>Reject
+                        </button>
+                    }
+                    @if (selectedRequest.Status == "Pending" || selectedRequest.Status == "Approved")
+                    {
+                        <button type="button" class="btn btn-warning" @onclick="() => CancelRequest(selectedRequest)">
+                            <i class="fas fa-ban me-2"></i>Cancel
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private List<InterpreterRequestData>? requests;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private InterpreterRequestData? selectedRequest;
+    
+    // Filters
+    private string statusFilter = "";
+    private string languageFilter = "";
+    private DateTime? fromDate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRequests();
+    }
+
+    private async Task LoadRequests()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            
+            requests = await InterpreterRequestService.GetInterpreterRequestsAsync(
+                agencyId: "1", // TODO: Get from user claims
+                status: string.IsNullOrEmpty(statusFilter) ? null : statusFilter,
+                language: string.IsNullOrEmpty(languageFilter) ? null : languageFilter
+            );
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading interpreter requests");
+            errorMessage = "Failed to load interpreter requests. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        await LoadRequests();
+    }
+
+    private async Task ClearFilters()
+    {
+        statusFilter = "";
+        languageFilter = "";
+        fromDate = null;
+        await LoadRequests();
+    }
+
+    private void ViewRequest(InterpreterRequestData request)
+    {
+        selectedRequest = request;
+    }
+
+    private void CloseModal()
+    {
+        selectedRequest = null;
+    }
+
+    private async Task ApproveRequest(InterpreterRequestData request)
+    {
+        try
+        {
+            var updateRequest = new UpdateInterpreterRequestStatusRequest
+            {
+                Status = "Approved"
+            };
+
+            var updatedRequest = await InterpreterRequestService.UpdateRequestStatusAsync(request.Id, updateRequest);
+            if (updatedRequest != null)
+            {
+                await LoadRequests();
+                CloseModal();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error approving request {RequestId}", request.Id);
+            errorMessage = "Failed to approve request. Please try again.";
+        }
+    }
+
+    private async Task RejectRequest(InterpreterRequestData request)
+    {
+        try
+        {
+            var updateRequest = new UpdateInterpreterRequestStatusRequest
+            {
+                Status = "Rejected"
+            };
+
+            var updatedRequest = await InterpreterRequestService.UpdateRequestStatusAsync(request.Id, updateRequest);
+            if (updatedRequest != null)
+            {
+                await LoadRequests();
+                CloseModal();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error rejecting request {RequestId}", request.Id);
+            errorMessage = "Failed to reject request. Please try again.";
+        }
+    }
+
+    private async Task CancelRequest(InterpreterRequestData request)
+    {
+        try
+        {
+            var cancelledRequest = await InterpreterRequestService.CancelRequestAsync(request.Id);
+            if (cancelledRequest != null)
+            {
+                await LoadRequests();
+                CloseModal();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error cancelling request {RequestId}", request.Id);
+            errorMessage = "Failed to cancel request. Please try again.";
+        }
+    }
+}

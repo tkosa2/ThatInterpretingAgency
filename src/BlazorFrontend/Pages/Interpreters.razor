@@ -1,0 +1,211 @@
+@page "/interpreters"
+
+<PageTitle>Interpreters - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <h2>Manage Interpreters</h2>
+    
+    <div class="row mb-3">
+        <div class="col">
+            <button class="btn btn-primary" @onclick="ShowCreateForm">
+                <span class="oi oi-plus"></span> Add New Interpreter
+            </button>
+        </div>
+    </div>
+
+    @if (showCreateForm)
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5>Add New Interpreter</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <input id="fullName" class="form-control" @bind="fullName" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="skills">Skills (comma-separated)</label>
+                            <input id="skills" class="form-control" @bind="skillsInput" placeholder="Spanish, ASL, French" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="hourlyRate">Hourly Rate</label>
+                            <input id="hourlyRate" class="form-control" @bind="hourlyRate" type="number" step="0.01" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="agencyId">Agency ID</label>
+                            <input id="agencyId" class="form-control" @bind="agencyId" />
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="btn btn-success" @onclick="CreateInterpreter">Add Interpreter</button>
+                    <button class="btn btn-secondary ms-2" @onclick="CancelCreate">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Interpreters</h5>
+                </div>
+                <div class="card-body">
+                    @if (interpreters == null)
+                    {
+                        <p>Loading interpreters...</p>
+                    }
+                    else if (!interpreters.Any())
+                    {
+                        <p>No interpreters found.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Skills</th>
+                                        <th>Status</th>
+                                        <th>Hourly Rate</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var interpreter in interpreters)
+                                    {
+                                        <tr>
+                                            <td>@interpreter.FullName</td>
+                                            <td>
+                                                @if (interpreter.Skills != null)
+                                                {
+                                                    @foreach (var skill in interpreter.Skills)
+                                                    {
+                                                        <span class="badge bg-info me-1">@skill</span>
+                                                    }
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success">Available</span>
+                                            </td>
+                                            <td>$@interpreter.HourlyRate</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="() => EditInterpreter(interpreter)">
+                                                    <span class="oi oi-pencil"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-info" @onclick="() => ViewAvailability(interpreter)">
+                                                    <span class="oi oi-calendar"></span>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteInterpreter(interpreter)">
+                                                    <span class="oi oi-trash"></span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<InterpreterData>? interpreters;
+    private bool showCreateForm = false;
+    private string fullName = "";
+    private string skillsInput = "";
+    private decimal hourlyRate = 0;
+    private string agencyId = "";
+
+    public class InterpreterData
+    {
+        public string FullName { get; set; } = "";
+        public List<string> Skills { get; set; } = new();
+        public decimal HourlyRate { get; set; }
+        public string AgencyId { get; set; } = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: Load interpreters from API
+        await LoadInterpreters();
+    }
+
+    private async Task LoadInterpreters()
+    {
+        // TODO: Call API to get interpreters
+        interpreters = new List<InterpreterData>
+        {
+            new InterpreterData { FullName = "John Doe", Skills = new List<string> { "Spanish", "French" }, HourlyRate = 45.00m, AgencyId = "agency1" }
+        };
+    }
+
+    private void ShowCreateForm()
+    {
+        showCreateForm = true;
+        fullName = "";
+        skillsInput = "";
+        hourlyRate = 0;
+        agencyId = "";
+    }
+
+    private void CancelCreate()
+    {
+        showCreateForm = false;
+    }
+
+    private async Task CreateInterpreter()
+    {
+        if (!string.IsNullOrEmpty(fullName))
+        {
+            var skills = !string.IsNullOrEmpty(skillsInput) 
+                ? skillsInput.Split(',').Select(s => s.Trim()).ToList() 
+                : new List<string>();
+            
+            interpreters?.Add(new InterpreterData 
+            { 
+                FullName = fullName, 
+                Skills = skills, 
+                HourlyRate = hourlyRate, 
+                AgencyId = agencyId 
+            });
+        }
+        
+        showCreateForm = false;
+        await LoadInterpreters();
+    }
+
+    private void EditInterpreter(InterpreterData interpreter)
+    {
+        // TODO: Implement edit functionality
+    }
+
+    private void ViewAvailability(InterpreterData interpreter)
+    {
+        // TODO: Show availability calendar
+    }
+
+    private async Task DeleteInterpreter(InterpreterData interpreter)
+    {
+        interpreters?.Remove(interpreter);
+        await LoadInterpreters();
+    }
+}

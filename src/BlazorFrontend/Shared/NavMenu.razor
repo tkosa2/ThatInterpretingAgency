@@ -1,0 +1,75 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">THAT Interpreting Agency</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="agencies">
+                <span class="oi oi-people" aria-hidden="true"></span> Agencies
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="interpreters">
+                <span class="oi oi-person" aria-hidden="true"></span> Interpreters
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="clients">
+                <span class="oi oi-briefcase" aria-hidden="true"></span> Clients
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="interpreter-requests">
+                <span class="oi oi-list" aria-hidden="true"></span> Interpreter Requests
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="appointments">
+                <span class="oi oi-calendar" aria-hidden="true"></span> Appointments
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="billing">
+                <span class="oi oi-dollar" aria-hidden="true"></span> Billing
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="notifications">
+                <span class="oi oi-bell" aria-hidden="true"></span> Notifications
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="admin">
+                <span class="oi oi-cog" aria-hidden="true"></span> Admin
+            </NavLink>
+            <NavLink class="nav-link" href="agency-admin">
+                <span class="oi oi-briefcase" aria-hidden="true"></span> Agency Admin
+            </NavLink>
+            <NavLink class="nav-link" href="staff-management">
+                <span class="oi oi-people" aria-hidden="true"></span> Staff Management
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

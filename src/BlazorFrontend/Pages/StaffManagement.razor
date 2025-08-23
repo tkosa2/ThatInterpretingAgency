@@ -1,0 +1,822 @@
+@page "/staff-management"
+@inject IStaffService StaffService
+@inject ILogger<StaffManagement> Logger
+
+<PageTitle>Staff Management - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>Staff Management</h2>
+            <p class="lead">Manage your agency's staff members, interpreters, and administrative personnel</p>
+        </div>
+        <div class="col text-end">
+            <button class="btn btn-primary" @onclick="ShowAddStaffForm">
+                <span class="oi oi-plus"></span> Add Staff Member
+            </button>
+        </div>
+    </div>
+
+    <!-- Staff Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>Total Staff</h4>
+                    <h2>@(staff?.Count ?? 0)</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4>Interpreters</h4>
+                    <h2>@(staff?.Count(s => s.Role == "Interpreter") ?? 0)</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>Administrative</h4>
+                    <h2>@(staff?.Count(s => s.Role != "Interpreter") ?? 0)</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <h4>Active</h4>
+                    <h2>@(staff?.Count(s => s.Status == "Active") ?? 0)</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Staff Form -->
+    @if (showAddStaffForm)
+    {
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Add New Staff Member</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffName">Full Name *</label>
+                                    <input id="staffName" class="form-control" @bind="newStaff.FullName" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffEmail">Email *</label>
+                                    <input id="staffEmail" class="form-control" @bind="newStaff.Email" type="email" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffRole">Role *</label>
+                                    <select id="staffRole" class="form-control" @bind="newStaff.Role">
+                                        <option value="">Select Role</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Scheduler">Scheduler</option>
+                                        <option value="Accountant">Accountant</option>
+                                        <option value="Coordinator">Coordinator</option>
+                                        <option value="Interpreter">Interpreter</option>
+                                        <option value="Receptionist">Receptionist</option>
+                                        <option value="Manager">Manager</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffPhone">Phone</label>
+                                    <input id="staffPhone" class="form-control" @bind="newStaff.Phone" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffHireDate">Hire Date</label>
+                                    <input id="staffHireDate" class="form-control" @bind="newStaff.HireDate" type="date" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="staffHourlyRate">Hourly Rate</label>
+                                    <input id="staffHourlyRate" class="form-control" @bind="newStaff.HourlyRate" type="number" step="0.01" />
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (newStaff.Role == "Interpreter")
+                        {
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="interpreterLanguages">Languages (comma-separated)</label>
+                                        <input id="interpreterLanguages" class="form-control" @bind="interpreterLanguagesInput" placeholder="Spanish, French, ASL" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="interpreterSpecializations">Specializations</label>
+                                        <input id="interpreterSpecializations" class="form-control" @bind="interpreterSpecializations" placeholder="Medical, Legal, Educational" />
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="staffAddress">Address</label>
+                                    <textarea id="staffAddress" class="form-control" @bind="newStaff.Address" rows="2"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="staffNotes">Notes</label>
+                                    <textarea id="staffNotes" class="form-control" @bind="newStaff.Notes" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button class="btn btn-success" @onclick="AddStaff" disabled="@(!CanSubmitStaffForm())">
+                                <span class="oi oi-plus"></span> Add Staff Member
+                            </button>
+                            <button class="btn btn-secondary ms-2" @onclick="CancelAddStaff">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Edit Staff Form -->
+    @if (showEditStaffForm)
+    {
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Edit Staff Member</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editStaffName">Full Name *</label>
+                                    <input id="editStaffName" class="form-control" @bind="editStaff.FullName" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editStaffEmail">Email *</label>
+                                    <input id="editStaffEmail" class="form-control" @bind="editStaff.Email" type="email" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editStaffRole">Role *</label>
+                                    <select id="editStaffRole" class="form-control" @bind="editStaff.Role">
+                                        <option value="">Select Role</option>
+                                        <option value="Admin">Admin</option>
+                                        <option value="Scheduler">Scheduler</option>
+                                        <option value="Accountant">Accountant</option>
+                                        <option value="Coordinator">Coordinator</option>
+                                        <option value="Interpreter">Interpreter</option>
+                                        <option value="Receptionist">Receptionist</option>
+                                        <option value="Manager">Manager</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editStaffPhone">Phone</label>
+                                    <input id="editStaffPhone" class="form-control" @bind="editStaff.Phone" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editStaffHireDate">Hire Date</label>
+                                    <input id="editStaffHireDate" class="form-control" @bind="editStaff.HireDate" type="date" />
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="editStaffHourlyRate">Hourly Rate</label>
+                                    <input id="editStaffHourlyRate" class="form-control" @bind="editStaff.HourlyRate" type="number" step="0.01" />
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (editStaff.Role == "Interpreter")
+                        {
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editInterpreterLanguages">Languages (comma-separated)</label>
+                                        <input id="editInterpreterLanguages" class="form-control" @bind="editInterpreterLanguagesInput" placeholder="Spanish, French, ASL" />
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="editInterpreterSpecializations">Specializations</label>
+                                        <input id="editInterpreterSpecializations" class="form-control" @bind="editInterpreterSpecializations" placeholder="Medical, Legal, Educational" />
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editStaffAddress">Address</label>
+                                    <textarea id="editStaffAddress" class="form-control" @bind="editStaff.Address" rows="2"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="editStaffNotes">Notes</label>
+                                    <textarea id="editStaffNotes" class="form-control" @bind="editStaff.Notes" rows="2"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button class="btn btn-success" @onclick="SaveStaffChanges" disabled="@(!CanSubmitEditStaffForm())">
+                                <span class="oi oi-check"></span> Save Changes
+                            </button>
+                            <button class="btn btn-secondary ms-2" @onclick="CancelEditStaff">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Success/Error Messages -->
+    @if (!string.IsNullOrEmpty(successMessage))
+    {
+        <div class="row mb-3">
+            <div class="col">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    @successMessage
+                    <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="row mb-3">
+            <div class="col">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    @errorMessage
+                    <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Staff List -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5>Staff Directory</h5>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" placeholder="Search staff..." @bind="searchTerm" @bind:event="oninput" />
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-control" @bind="roleFilter">
+                                <option value="">All Roles</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Interpreter">Interpreter</option>
+                                <option value="Scheduler">Scheduler</option>
+                                <option value="Accountant">Accountant</option>
+                                <option value="Coordinator">Coordinator</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (filteredStaff != null && filteredStaff.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Role</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Hire Date</th>
+                                        <th>Hourly Rate</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var member in filteredStaff)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <strong>@member.FullName</strong>
+                                                @if (member.Role == "Interpreter")
+                                                {
+                                                    <br><small class="text-muted">@GetLanguagesDisplay(member.Languages)</small>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge @GetRoleBadgeClass(member.Role)">@member.Role</span>
+                                            </td>
+                                            <td>@member.Email</td>
+                                            <td>@member.Phone</td>
+                                            <td>@member.HireDate.ToShortDateString()</td>
+                                            <td>
+                                                @if (member.HourlyRate > 0)
+                                                {
+                                                    <span>$@member.HourlyRate.ToString("F2")/hr</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">N/A</span>
+                                                }
+                                            </td>
+                                            <td>
+                                                <span class="badge @GetStatusBadgeClass(member.Status)">@member.Status</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-sm btn-outline-primary" @onclick="() => EditStaff(member)" title="Edit">
+                                                        <span class="oi oi-pencil"></span>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-info" @onclick="() => ViewStaffDetails(member)" title="View Details">
+                                                        <span class="oi oi-eye"></span>
+                                                    </button>
+                                                    @if (member.Status == "Active")
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-warning" @onclick="() => DeactivateStaff(member)" title="Deactivate">
+                                                            <span class="oi oi-power-standby"></span>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button class="btn btn-sm btn-outline-success" @onclick="() => ActivateStaff(member)" title="Activate">
+                                                            <span class="oi oi-check"></span>
+                                                        </button>
+                                                    }
+                                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteStaff(member)" title="Delete">
+                                                        <span class="oi oi-trash"></span>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <p class="text-muted">No staff members found</p>
+                            <button class="btn btn-primary" @onclick="ShowAddStaffForm">
+                                <span class="oi oi-plus"></span> Add Your First Staff Member
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<StaffData>? staff;
+    private List<StaffData>? filteredStaff;
+    private bool showAddStaffForm = false;
+    private bool showEditStaffForm = false;
+    private StaffData newStaff = new();
+    private StaffData editStaff = new();
+    private string searchTerm = "";
+    private string roleFilter = "";
+    private string interpreterLanguagesInput = "";
+    private string interpreterSpecializations = "";
+    private string editInterpreterLanguagesInput = "";
+    private string editInterpreterSpecializations = "";
+    private string? successMessage;
+    private string? errorMessage;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStaffData();
+    }
+
+    protected override void OnParametersSet()
+    {
+        FilterStaff();
+    }
+
+    private async Task LoadStaffData()
+    {
+        try
+        {
+            staff = await StaffService.GetStaffAsync();
+            FilterStaff();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading staff data");
+            // Fallback to sample data if API fails
+            staff = new List<StaffData>
+            {
+                new StaffData 
+                { 
+                    Id = "1", 
+                    FullName = "John Smith", 
+                    Role = "Admin", 
+                    Email = "john@agency.com",
+                    Phone = "555-0101",
+                    HireDate = DateTime.Now.AddYears(-2),
+                    HourlyRate = 0,
+                    Status = "Active"
+                },
+                new StaffData 
+                { 
+                    Id = "2", 
+                    FullName = "Sarah Johnson", 
+                    Role = "Scheduler", 
+                    Email = "sarah@agency.com",
+                    Phone = "555-0102",
+                    HireDate = DateTime.Now.AddYears(-1),
+                    HourlyRate = 25.00m,
+                    Status = "Active"
+                },
+                new StaffData 
+                { 
+                    Id = "3", 
+                    FullName = "Mike Davis", 
+                    Role = "Interpreter", 
+                    Email = "mike@agency.com",
+                    Phone = "555-0103",
+                    HireDate = DateTime.Now.AddMonths(-6),
+                    HourlyRate = 45.00m,
+                    Status = "Active",
+                    Languages = new List<string> { "Spanish", "French" },
+                    Specializations = "Medical, Legal"
+                },
+                new StaffData 
+                { 
+                    Id = "4", 
+                    FullName = "Lisa Chen", 
+                    Role = "Interpreter", 
+                    Email = "lisa@agency.com",
+                    Phone = "555-0104",
+                    HireDate = DateTime.Now.AddMonths(-3),
+                    HourlyRate = 50.00m,
+                    Status = "Active",
+                    Languages = new List<string> { "Mandarin", "Cantonese" },
+                    Specializations = "Medical, Educational"
+                }
+            };
+            FilterStaff();
+        }
+    }
+
+    private async Task SaveStaffChanges()
+    {
+        if (!CanSubmitEditStaffForm()) return;
+
+        try
+        {
+            // Handle interpreter-specific data
+            if (editStaff.Role == "Interpreter")
+            {
+                editStaff.Languages = !string.IsNullOrEmpty(editInterpreterLanguagesInput)
+                    ? editInterpreterLanguagesInput.Split(',').Select(s => s.Trim()).ToList()
+                    : new List<string>();
+                editStaff.Specializations = editInterpreterSpecializations;
+            }
+
+            var request = new UpdateStaffRequest
+            {
+                FullName = editStaff.FullName,
+                Email = editStaff.Email,
+                Role = editStaff.Role,
+                Phone = editStaff.Phone,
+                HireDate = editStaff.HireDate,
+                HourlyRate = editStaff.HourlyRate,
+                Address = editStaff.Address,
+                Notes = editStaff.Notes,
+                Languages = editStaff.Languages,
+                Specializations = editStaff.Specializations
+            };
+
+            var updatedStaff = await StaffService.UpdateStaffMemberAsync(editStaff.Id, request);
+            if (updatedStaff != null)
+            {
+                // Show success message
+                successMessage = $"Staff member '{updatedStaff.FullName}' updated successfully!";
+                
+                // Reset form and hide
+                editStaff = new StaffData();
+                editInterpreterLanguagesInput = "";
+                editInterpreterSpecializations = "";
+                showEditStaffForm = false;
+                
+                // Reload data
+                await LoadStaffData();
+                
+                // Clear success message after delay
+                await Task.Delay(3000);
+                successMessage = null;
+            }
+            else
+            {
+                errorMessage = "Failed to update staff member. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating staff member");
+            errorMessage = "An error occurred while updating the staff member. Please try again.";
+        }
+    }
+
+    private void CancelEditStaff()
+    {
+        showEditStaffForm = false;
+        showAddStaffForm = false;
+        editStaff = new StaffData();
+        editInterpreterLanguagesInput = "";
+        editInterpreterSpecializations = "";
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private void FilterStaff()
+    {
+        if (staff == null) return;
+
+        filteredStaff = staff.Where(s => 
+            (string.IsNullOrEmpty(searchTerm) || 
+             s.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             s.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             s.Role.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(roleFilter) || s.Role == roleFilter)
+        ).ToList();
+    }
+
+    private void ShowAddStaffForm()
+    {
+        showAddStaffForm = true;
+        showEditStaffForm = false;
+        newStaff = new StaffData();
+        interpreterLanguagesInput = "";
+        interpreterSpecializations = "";
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private void CancelAddStaff()
+    {
+        showAddStaffForm = false;
+        showEditStaffForm = false;
+        newStaff = new StaffData();
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private bool CanSubmitStaffForm()
+    {
+        return !string.IsNullOrEmpty(newStaff.FullName) &&
+               !string.IsNullOrEmpty(newStaff.Email) &&
+               !string.IsNullOrEmpty(newStaff.Role);
+    }
+
+    private bool CanSubmitEditStaffForm()
+    {
+        return !string.IsNullOrEmpty(editStaff.FullName) &&
+               !string.IsNullOrEmpty(editStaff.Email) &&
+               !string.IsNullOrEmpty(editStaff.Role);
+    }
+
+    private void ValidateForm()
+    {
+        // Trigger UI refresh to show validation states
+        StateHasChanged();
+    }
+
+    private async Task AddStaff()
+    {
+        if (!CanSubmitStaffForm()) return;
+
+        try
+        {
+            // Handle interpreter-specific data
+            if (newStaff.Role == "Interpreter")
+            {
+                newStaff.Languages = !string.IsNullOrEmpty(interpreterLanguagesInput)
+                    ? interpreterLanguagesInput.Split(',').Select(s => s.Trim()).ToList()
+                    : new List<string>();
+                newStaff.Specializations = interpreterSpecializations;
+            }
+
+            var request = new CreateStaffRequest
+            {
+                FullName = newStaff.FullName,
+                Email = newStaff.Email,
+                Role = newStaff.Role,
+                Phone = newStaff.Phone,
+                HireDate = newStaff.HireDate,
+                HourlyRate = newStaff.HourlyRate,
+                Address = newStaff.Address,
+                Notes = newStaff.Notes,
+                Languages = newStaff.Languages,
+                Specializations = newStaff.Specializations
+            };
+
+            var createdStaff = await StaffService.CreateStaffMemberAsync(request);
+            if (createdStaff != null)
+            {
+                // Show success message
+                successMessage = $"Staff member '{createdStaff.FullName}' added successfully!";
+                
+                // Reset form and hide
+                newStaff = new StaffData();
+                interpreterLanguagesInput = "";
+                interpreterSpecializations = "";
+                showAddStaffForm = false;
+                
+                // Reload data
+                await LoadStaffData();
+                
+                // Clear success message after delay
+                await Task.Delay(3000);
+                successMessage = null;
+            }
+            else
+            {
+                errorMessage = "Failed to add staff member. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error adding staff member");
+            errorMessage = "An error occurred while adding the staff member. Please try again.";
+        }
+    }
+
+    private void EditStaff(StaffData member)
+    {
+        // Populate edit form with member data
+        editStaff = new StaffData
+        {
+            Id = member.Id,
+            FullName = member.FullName,
+            Email = member.Email,
+            Role = member.Role,
+            Phone = member.Phone,
+            HireDate = member.HireDate,
+            HourlyRate = member.HourlyRate,
+            Status = member.Status,
+            Address = member.Address ?? "",
+            Notes = member.Notes ?? "",
+            Languages = member.Languages ?? new List<string>(),
+            Specializations = member.Specializations ?? ""
+        };
+
+        // Handle interpreter-specific fields
+        if (member.Role == "Interpreter")
+        {
+            editInterpreterLanguagesInput = member.Languages != null ? string.Join(", ", member.Languages) : "";
+            editInterpreterSpecializations = member.Specializations ?? "";
+        }
+        else
+        {
+            editInterpreterLanguagesInput = "";
+            editInterpreterSpecializations = "";
+        }
+
+        showEditStaffForm = true;
+        showAddStaffForm = false;
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private void ViewStaffDetails(StaffData member)
+    {
+        // TODO: Implement view details functionality
+    }
+
+    private async Task DeactivateStaff(StaffData member)
+    {
+        try
+        {
+            var success = await StaffService.DeactivateStaffMemberAsync(member.Id);
+            if (success)
+            {
+                member.Status = "Inactive";
+                await LoadStaffData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error deactivating staff member {StaffId}", member.Id);
+            // TODO: Show error message to user
+        }
+    }
+
+    private async Task ActivateStaff(StaffData member)
+    {
+        try
+        {
+            var success = await StaffService.ActivateStaffMemberAsync(member.Id);
+            if (success)
+            {
+                member.Status = "Active";
+                await LoadStaffData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error activating staff member {StaffId}", member.Id);
+            // TODO: Show error message to user
+        }
+    }
+
+    private async Task DeleteStaff(StaffData member)
+    {
+        try
+        {
+            var success = await StaffService.DeleteStaffMemberAsync(member.Id);
+            if (success)
+            {
+                await LoadStaffData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error deleting staff member {StaffId}", member.Id);
+            // TODO: Show error message to user
+        }
+    }
+
+    // Helper methods for UI
+    private string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "Admin" => "bg-danger",
+            "Interpreter" => "bg-success",
+            "Scheduler" => "bg-primary",
+            "Accountant" => "bg-info",
+            "Coordinator" => "bg-warning",
+            "Manager" => "bg-dark",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Active" => "bg-success",
+            "Inactive" => "bg-secondary",
+            "On Leave" => "bg-warning",
+            "Terminated" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetLanguagesDisplay(List<string> languages)
+    {
+        return languages != null && languages.Any() 
+            ? string.Join(", ", languages) 
+            : "No languages specified";
+    }
+}

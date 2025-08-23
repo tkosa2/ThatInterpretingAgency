@@ -1,0 +1,204 @@
+-- Create Agencies table (if not exists)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Agencies')
+BEGIN
+    CREATE TABLE Agencies (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        Name NVARCHAR(100) NOT NULL,
+        ContactInfo NVARCHAR(500),
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+        UpdatedAt DATETIME2,
+        CONSTRAINT UQ_Agencies_Name UNIQUE (Name)
+    );
+    CREATE CLUSTERED INDEX CIX_Agencies_Id ON Agencies(Id);
+END;
+
+-- Create AgencyStaff junction table for Many-to-Many User-Agency relationship
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AgencyStaff')
+BEGIN
+    CREATE TABLE AgencyStaff (
+        AgencyId UNIQUEIDENTIFIER NOT NULL,
+        UserId UNIQUEIDENTIFIER NOT NULL,
+        Role NVARCHAR(50),
+        HireDate DATETIME2,
+        Status NVARCHAR(20) DEFAULT 'Active',
+        PRIMARY KEY (AgencyId, UserId),
+        CONSTRAINT FK_AgencyStaff_Agencies FOREIGN KEY (AgencyId) REFERENCES Agencies(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_AgencyStaff_Users FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
+    );
+    CREATE INDEX IX_AgencyStaff_AgencyId ON AgencyStaff(AgencyId);
+    CREATE INDEX IX_AgencyStaff_UserId ON AgencyStaff(UserId);
+END;
+
+-- Create Interpreters table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Interpreters')
+BEGIN
+    CREATE TABLE Interpreters (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        UserId UNIQUEIDENTIFIER NOT NULL,
+        AgencyId UNIQUEIDENTIFIER NOT NULL,
+        FullName NVARCHAR(100) NOT NULL,
+        CONSTRAINT FK_Interpreters_Users FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_Interpreters_Agencies FOREIGN KEY (AgencyId) REFERENCES Agencies(Id) ON DELETE CASCADE,
+        CONSTRAINT UQ_Interpreters_UserId UNIQUE (UserId)
+    );
+    CREATE INDEX IX_Interpreters_AgencyId ON Interpreters(AgencyId);
+END;
+
+-- Create Clients table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Clients')
+BEGIN
+    CREATE TABLE Clients (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        UserId UNIQUEIDENTIFIER NOT NULL,
+        AgencyId UNIQUEIDENTIFIER NOT NULL,
+        OrganizationName NVARCHAR(100),
+        Preferences NVARCHAR(500),
+        CONSTRAINT FK_Clients_Users FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_Clients_Agencies FOREIGN KEY (AgencyId) REFERENCES Agencies(Id) ON DELETE CASCADE,
+        CONSTRAINT UQ_Clients_UserId UNIQUE (UserId)
+    );
+    CREATE INDEX IX_Clients_AgencyId ON Clients(AgencyId);
+END;
+
+-- Create InterpreterRequests table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'InterpreterRequests')
+BEGIN
+    CREATE TABLE InterpreterRequests (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        AgencyId UNIQUEIDENTIFIER NOT NULL,
+        RequestorId UNIQUEIDENTIFIER NOT NULL,
+        AppointmentType NVARCHAR(50) NOT NULL, -- In-Person, Virtual
+        VirtualMeetingLink NVARCHAR(500),
+        Location NVARCHAR(500),
+        Mode NVARCHAR(50), -- Consecutive, Simultaneous
+        Description NVARCHAR(MAX),
+        RequestedDate DATETIME2 NOT NULL,
+        StartTime DATETIME2 NOT NULL,
+        EndTime DATETIME2 NOT NULL,
+        Language NVARCHAR(100) NOT NULL,
+        SpecialInstructions NVARCHAR(MAX),
+        Status NVARCHAR(50) NOT NULL DEFAULT 'Pending', -- Pending, Approved, Rejected, Fulfilled
+        Division NVARCHAR(100),
+        Program NVARCHAR(100),
+        LniContact NVARCHAR(100),
+        DayOfEventContact NVARCHAR(100),
+        DayOfEventContactPhone NVARCHAR(50),
+        CostCode NVARCHAR(50),
+        InvoiceApprover NVARCHAR(100),
+        SupportingMaterials BIT NOT NULL DEFAULT 0,
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+        CONSTRAINT FK_InterpreterRequests_Agencies FOREIGN KEY (AgencyId) REFERENCES Agencies(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_InterpreterRequests_Clients FOREIGN KEY (RequestorId) REFERENCES Clients(Id),
+        CONSTRAINT CHK_InterpreterRequests_Mode CHECK (Mode IN ('Consecutive', 'Simultaneous')),
+        CONSTRAINT CHK_InterpreterRequests_AppointmentType CHECK (AppointmentType IN ('In-Person', 'Virtual'))
+    );
+    CREATE INDEX IX_InterpreterRequests_AgencyId ON InterpreterRequests(AgencyId);
+    CREATE INDEX IX_InterpreterRequests_RequestorId ON InterpreterRequests(RequestorId);
+END;
+
+-- Create Appointments table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Appointments')
+BEGIN
+    CREATE TABLE Appointments (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        AgencyId UNIQUEIDENTIFIER NOT NULL,
+        InterpreterRequestId UNIQUEIDENTIFIER, -- Nullable, links to request
+        InterpreterId UNIQUEIDENTIFIER NOT NULL,
+        ClientId UNIQUEIDENTIFIER NOT NULL,
+        TimeSlotStart DATETIME2 NOT NULL,
+        TimeSlotEnd DATETIME2 NOT NULL,
+        Status NVARCHAR(50) NOT NULL DEFAULT 'Scheduled',
+        CONSTRAINT FK_Appointments_Agencies FOREIGN KEY (AgencyId) REFERENCES Agencies(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_Appointments_InterpreterRequests FOREIGN KEY (InterpreterRequestId) REFERENCES InterpreterRequests(Id),
+        CONSTRAINT FK_Appointments_Interpreters FOREIGN KEY (InterpreterId) REFERENCES Interpreters(Id),
+        CONSTRAINT FK_Appointments_Clients FOREIGN KEY (ClientId) REFERENCES Clients(Id)
+    );
+    CREATE INDEX IX_Appointments_AgencyId ON Appointments(AgencyId);
+    CREATE INDEX IX_Appointments_InterpreterRequestId ON Appointments(InterpreterRequestId);
+    CREATE INDEX IX_Appointments_InterpreterId ON Appointments(InterpreterId);
+    CREATE INDEX IX_Appointments_ClientId ON Appointments(ClientId);
+END;
+
+-- Create Invoices table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Invoices')
+BEGIN
+    CREATE TABLE Invoices (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        AgencyId UNIQUEIDENTIFIER NOT NULL,
+        ClientId UNIQUEIDENTIFIER NOT NULL,
+        AppointmentId UNIQUEIDENTIFIER NOT NULL,
+        QuickBooksInvoiceId NVARCHAR(50),
+        CreatedAt DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+        CONSTRAINT FK_Invoices_Agencies FOREIGN KEY (AgencyId) REFERENCES Agencies(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_Invoices_Clients FOREIGN KEY (ClientId) REFERENCES Clients(Id),
+        CONSTRAINT FK_Invoices_Appointments FOREIGN KEY (AppointmentId) REFERENCES Appointments(Id)
+    );
+    CREATE INDEX IX_Invoices_AgencyId ON Invoices(AgencyId);
+    CREATE INDEX IX_Invoices_ClientId ON Invoices(ClientId);
+END;
+
+-- Create Notifications table
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Notifications')
+BEGIN
+    CREATE TABLE Notifications (
+        Id UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
+        AgencyId UNIQUEIDENTIFIER NOT NULL,
+        UserId UNIQUEIDENTIFIER NOT NULL,
+        Type NVARCHAR(50) NOT NULL,
+        Message NVARCHAR(1000),
+        SentAt DATETIME2,
+        CONSTRAINT FK_Notifications_Agencies FOREIGN KEY (AgencyId) REFERENCES Agencies(Id) ON DELETE CASCADE,
+        CONSTRAINT FK_Notifications_Users FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id)
+    );
+    CREATE INDEX IX_Notifications_AgencyId ON Notifications(AgencyId);
+    CREATE INDEX IX_Notifications_UserId ON Notifications(UserId);
+END;
+
+-- Data migration
+BEGIN TRANSACTION;
+
+-- Insert default agency if not exists
+IF NOT EXISTS (SELECT 1 FROM Agencies WHERE Name = 'THAT Interpreting Agency')
+BEGIN
+    INSERT INTO Agencies (Id, Name, ContactInfo, CreatedAt)
+    VALUES (NEWID(), 'THAT Interpreting Agency', 'contact@thatinterpreting.com', GETUTCDATE());
+END;
+
+-- Assign existing interpreter users to default agency
+DECLARE @DefaultAgencyId UNIQUEIDENTIFIER;
+SELECT TOP 1 @DefaultAgencyId = Id FROM Agencies WHERE Name = 'THAT Interpreting Agency';
+
+INSERT INTO AgencyStaff (AgencyId, UserId, Role, HireDate, Status)
+SELECT @DefaultAgencyId, u.Id, 'Interpreter', GETUTCDATE(), 'Active'
+FROM AspNetUsers u
+JOIN Interpreters i ON i.UserId = u.Id
+WHERE NOT EXISTS (
+    SELECT 1 FROM AgencyStaff WHERE UserId = u.Id AND AgencyId = @DefaultAgencyId
+);
+
+-- Update Interpreters with AgencyId
+UPDATE Interpreters
+SET AgencyId = @DefaultAgencyId
+WHERE AgencyId IS NULL;
+
+-- Update Clients with AgencyId
+UPDATE Clients
+SET AgencyId = @DefaultAgencyId
+WHERE AgencyId IS NULL;
+
+-- Update Appointments with AgencyId
+UPDATE Appointments
+SET AgencyId = @DefaultAgencyId
+WHERE AgencyId IS NULL;
+
+-- Update Invoices with AgencyId
+UPDATE Invoices
+SET AgencyId = @DefaultAgencyId
+WHERE AgencyId IS NULL;
+
+-- Update Notifications with AgencyId
+UPDATE Notifications
+SET AgencyId = @DefaultAgencyId
+WHERE AgencyId IS NULL;
+
+COMMIT TRANSACTION;
