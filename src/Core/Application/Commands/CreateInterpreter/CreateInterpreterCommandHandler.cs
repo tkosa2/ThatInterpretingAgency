@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using ThatInterpretingAgency.Core.Application.Common;
+using System.Linq;
 
 namespace ThatInterpretingAgency.Core.Application.Commands.CreateInterpreter;
 
@@ -36,7 +37,7 @@ public class CreateInterpreterCommandHandler : IRequestHandler<CreateInterpreter
         }
 
         // Create new interpreter
-        var interpreter = ThatInterpretingAgency.Core.Domain.Entities.Interpreter.Create(request.AgencyId, request.UserId, request.FullName, request.Skills);
+        var interpreter = ThatInterpretingAgency.Core.Domain.Entities.Interpreter.Create(request.AgencyId, request.UserId, request.Skills);
 
         // Add to repository
         var savedInterpreter = await _interpreterRepository.AddAsync(interpreter, cancellationToken);
@@ -47,7 +48,7 @@ public class CreateInterpreterCommandHandler : IRequestHandler<CreateInterpreter
             InterpreterId = savedInterpreter.Id,
             AgencyId = savedInterpreter.AgencyId,
             UserId = savedInterpreter.UserId,
-            FullName = savedInterpreter.FullName,
+            FullName = string.Empty, // This will come from UserProfile when we have users
             Skills = savedInterpreter.Skills,
             CreatedAt = savedInterpreter.CreatedAt
         };

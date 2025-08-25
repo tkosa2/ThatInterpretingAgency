@@ -5,15 +5,21 @@ namespace ThatInterpretingAgency.Core.Domain.Entities;
 public class AgencyStaff : Entity
 {
     public Guid AgencyId { get; private set; }
-    public Guid UserId { get; private set; }
+    public string UserId { get; private set; } = string.Empty; // Changed to string to match AspNetUsers.Id
     public string Role { get; private set; } = string.Empty;
     public DateTime HireDate { get; private set; }
     public StaffStatus Status { get; private set; }
 
+    // Navigation properties
+    public virtual UserProfile UserProfile { get; private set; } = null!;
+
     private AgencyStaff() { }
 
-    public static AgencyStaff Create(Guid agencyId, Guid userId, string role, DateTime hireDate)
+    public static AgencyStaff Create(Guid agencyId, string userId, string role, DateTime hireDate)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
+
         if (string.IsNullOrWhiteSpace(role))
             throw new ArgumentException("Role cannot be empty", nameof(role));
 
@@ -23,7 +29,7 @@ public class AgencyStaff : Entity
         return new AgencyStaff
         {
             AgencyId = agencyId,
-            UserId = userId,
+            UserId = userId.Trim(),
             Role = role.Trim(),
             HireDate = hireDate,
             Status = StaffStatus.Active

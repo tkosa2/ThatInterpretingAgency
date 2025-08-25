@@ -47,7 +47,7 @@ public class ClientRepository : IClientRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Client?> GetByAgencyAndUserIdAsync(Guid agencyId, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<Client?> GetByAgencyAndUserIdAsync(Guid agencyId, string userId, CancellationToken cancellationToken = default)
     {
         return await _context.Clients
             .FirstOrDefaultAsync(c => c.AgencyId == agencyId && c.UserId == userId, cancellationToken);

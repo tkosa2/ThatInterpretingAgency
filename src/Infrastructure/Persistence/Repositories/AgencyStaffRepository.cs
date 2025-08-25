@@ -35,7 +35,7 @@ public class AgencyStaffRepository : IAgencyStaffRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<AgencyStaff?> GetByAgencyAndUserIdAsync(Guid agencyId, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<AgencyStaff?> GetByAgencyAndUserIdAsync(Guid agencyId, string userId, CancellationToken cancellationToken = default)
     {
         return await _context.AgencyStaff
             .FirstOrDefaultAsync(s => s.AgencyId == agencyId && s.UserId == userId, cancellationToken);
@@ -66,7 +66,7 @@ public class AgencyStaffRepository : IAgencyStaffRepository
             .AnyAsync(s => s.Id == id, cancellationToken);
     }
 
-    public async Task<bool> UserHasRoleInAgencyAsync(Guid userId, Guid agencyId, string role, CancellationToken cancellationToken = default)
+    public async Task<bool> UserHasRoleInAgencyAsync(string userId, Guid agencyId, string role, CancellationToken cancellationToken = default)
     {
         return await _context.AgencyStaff
             .AnyAsync(s => s.UserId == userId && s.AgencyId == agencyId && s.Role == role, cancellationToken);

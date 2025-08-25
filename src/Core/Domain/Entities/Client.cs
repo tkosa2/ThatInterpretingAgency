@@ -5,20 +5,23 @@ namespace ThatInterpretingAgency.Core.Domain.Entities;
 public class Client : Entity
 {
     public Guid AgencyId { get; private set; }
-    public Guid UserId { get; private set; }
+    public string UserId { get; private set; } = string.Empty; // Changed to string to match AspNetUsers.Id
     public string OrganizationName { get; private set; } = string.Empty;
     public Dictionary<string, string> Preferences { get; private set; } = new();
     public ClientStatus Status { get; private set; }
-    public string? ContactPerson { get; private set; }
-    public string? PhoneNumber { get; private set; }
-    public string? Email { get; private set; }
+
+    // Navigation properties
+    public virtual UserProfile UserProfile { get; private set; } = null!;
 
     private Client() { }
 
-    public static Client Create(Guid agencyId, Guid userId, string organizationName, Dictionary<string, string> preferences)
+    public static Client Create(Guid agencyId, string userId, string organizationName, Dictionary<string, string> preferences)
     {
         if (string.IsNullOrWhiteSpace(organizationName))
             throw new ArgumentException("Organization name cannot be empty", nameof(organizationName));
+
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
 
         if (preferences == null)
             preferences = new Dictionary<string, string>();
@@ -26,22 +29,19 @@ public class Client : Entity
         return new Client
         {
             AgencyId = agencyId,
-            UserId = userId,
+            UserId = userId.Trim(),
             OrganizationName = organizationName.Trim(),
             Preferences = preferences,
             Status = ClientStatus.Active
         };
     }
 
-    public void UpdateOrganizationInfo(string organizationName, string? contactPerson = null, string? phoneNumber = null, string? email = null)
+    public void UpdateOrganizationInfo(string organizationName)
     {
         if (string.IsNullOrWhiteSpace(organizationName))
             throw new ArgumentException("Organization name cannot be empty", nameof(organizationName));
 
         OrganizationName = organizationName.Trim();
-        ContactPerson = contactPerson?.Trim();
-        PhoneNumber = phoneNumber?.Trim();
-        Email = email?.Trim();
         UpdateTimestamp();
     }
 

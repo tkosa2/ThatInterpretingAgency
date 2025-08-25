@@ -11,15 +11,15 @@ public class AgencyAggregateTests
     {
         // Arrange
         var name = "Test Agency";
-        var contactInfo = "test@agency.com";
+        var description = "Test Agency Description";
 
         // Act
-        var agency = AgencyAggregate.Create(name, contactInfo);
+        var agency = AgencyAggregate.Create(name, description);
 
         // Assert
         Assert.NotNull(agency);
         Assert.Equal(name, agency.Name);
-        Assert.Equal(contactInfo, agency.ContactInfo);
+        Assert.Equal(description, agency.Description);
         Assert.Equal(AgencyStatus.Active, agency.Status);
         Assert.NotEqual(Guid.Empty, agency.Id);
         Assert.True(agency.CreatedAt > DateTime.UtcNow.AddMinutes(-1));
@@ -33,40 +33,26 @@ public class AgencyAggregateTests
     public void Create_WithInvalidName_ShouldThrowArgumentException(string invalidName)
     {
         // Arrange
-        var contactInfo = "test@agency.com";
+        var description = "Test Agency Description";
 
         // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => AgencyAggregate.Create(invalidName!, contactInfo));
+        var exception = Assert.Throws<ArgumentException>(() => AgencyAggregate.Create(invalidName!, description));
         Assert.Contains("name", exception.Message);
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData("   ")]
-    [InlineData(null)]
-    public void Create_WithInvalidContactInfo_ShouldThrowArgumentException(string invalidContactInfo)
-    {
-        // Arrange
-        var name = "Test Agency";
-
-        // Act & Assert
-        var exception = Assert.Throws<ArgumentException>(() => AgencyAggregate.Create(name, invalidContactInfo!));
-        Assert.Contains("contact info", exception.Message);
-    }
-
     [Fact]
-    public void UpdateContactInfo_WithValidData_ShouldUpdateContactInfo()
+    public void UpdateDescription_WithValidData_ShouldUpdateDescription()
     {
         // Arrange
-        var agency = AgencyAggregate.Create("Test Agency", "old@agency.com");
-        var newContactInfo = "new@agency.com";
+        var agency = AgencyAggregate.Create("Test Agency", "Old Description");
+        var newDescription = "New Description";
         var originalUpdatedAt = agency.UpdatedAt;
 
         // Act
-        agency.UpdateContactInfo(newContactInfo);
+        agency.UpdateDescription(newDescription);
 
         // Assert
-        Assert.Equal(newContactInfo, agency.ContactInfo);
+        Assert.Equal(newDescription, agency.Description);
         Assert.True(agency.UpdatedAt > originalUpdatedAt);
     }
 
@@ -74,7 +60,7 @@ public class AgencyAggregateTests
     public void Deactivate_ShouldChangeStatusToInactive()
     {
         // Arrange
-        var agency = AgencyAggregate.Create("Test Agency", "test@agency.com");
+        var agency = AgencyAggregate.Create("Test Agency", "Test Description");
         var originalUpdatedAt = agency.UpdatedAt;
 
         // Act
@@ -89,7 +75,7 @@ public class AgencyAggregateTests
     public void Activate_ShouldChangeStatusToActive()
     {
         // Arrange
-        var agency = AgencyAggregate.Create("Test Agency", "test@agency.com");
+        var agency = AgencyAggregate.Create("Test Agency", "Test Description");
         agency.Deactivate();
         var originalUpdatedAt = agency.UpdatedAt;
 
@@ -105,8 +91,8 @@ public class AgencyAggregateTests
     public void AddStaff_WithValidData_ShouldAddStaff()
     {
         // Arrange
-        var agency = AgencyAggregate.Create("Test Agency", "test@agency.com");
-        var userId = Guid.NewGuid();
+        var agency = AgencyAggregate.Create("Test Agency", "Test Description");
+        var userId = "test-user-id";
         var role = "Interpreter";
         var hireDate = DateTime.UtcNow.AddDays(-30);
 
@@ -125,8 +111,8 @@ public class AgencyAggregateTests
     public void AddStaff_WithDuplicateRole_ShouldThrowInvalidOperationException()
     {
         // Arrange
-        var agency = AgencyAggregate.Create("Test Agency", "test@agency.com");
-        var userId = Guid.NewGuid();
+        var agency = AgencyAggregate.Create("Test Agency", "Test Description");
+        var userId = "test-user-id";
         var role = "Interpreter";
         var hireDate = DateTime.UtcNow.AddDays(-30);
 

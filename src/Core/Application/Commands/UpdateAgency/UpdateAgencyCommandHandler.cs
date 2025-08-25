@@ -42,24 +42,10 @@ public class UpdateAgencyCommandHandler : IRequestHandler<UpdateAgencyCommand, A
             agency.UpdateName(request.Name);
         }
 
+        // Update description
         if (!string.IsNullOrWhiteSpace(request.ContactInfo))
         {
-            agency.UpdateContactInfo(request.ContactInfo);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Address))
-        {
-            agency.UpdateAddress(request.Address);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Phone))
-        {
-            agency.UpdatePhone(request.Phone);
-        }
-
-        if (!string.IsNullOrWhiteSpace(request.Email))
-        {
-            agency.UpdateEmail(request.Email);
+            agency.UpdateDescription(request.ContactInfo);
         }
 
         // Update status if provided
@@ -77,10 +63,10 @@ public class UpdateAgencyCommandHandler : IRequestHandler<UpdateAgencyCommand, A
         {
             Id = agency.Id.ToString(),
             Name = agency.Name,
-            ContactInfo = agency.ContactInfo,
-            Address = agency.Address,
-            Phone = agency.Phone,
-            Email = agency.Email,
+            ContactInfo = agency.Description ?? string.Empty,
+            Address = string.Empty, // These will come from UserProfile when we have users
+            Phone = string.Empty,
+            Email = string.Empty,
             Status = agency.Status.ToString(),
             CreatedAt = agency.CreatedAt,
             UpdatedAt = agency.UpdatedAt

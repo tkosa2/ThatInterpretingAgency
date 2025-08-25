@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MediatR;
 using ThatInterpretingAgency.Core.Application.Common;
 
+
 namespace ThatInterpretingAgency.Core.Application.Commands.CreateAgency;
 
 public class CreateAgencyCommandHandler : IRequestHandler<CreateAgencyCommand, CreateAgencyResponse>
@@ -30,10 +31,7 @@ public class CreateAgencyCommandHandler : IRequestHandler<CreateAgencyCommand, C
         // Create new agency
         var agency = ThatInterpretingAgency.Core.Domain.Aggregates.AgencyAggregate.Create(
             request.Name, 
-            request.ContactInfo, 
-            request.Address, 
-            request.Phone, 
-            request.Email);
+            request.ContactInfo); // This will be the description now
 
         // Add to repository
         var savedAgency = await _agencyRepository.AddAsync(agency, cancellationToken);
@@ -43,10 +41,10 @@ public class CreateAgencyCommandHandler : IRequestHandler<CreateAgencyCommand, C
         {
             AgencyId = savedAgency.Id,
             Name = savedAgency.Name,
-            ContactInfo = savedAgency.ContactInfo,
-            Address = savedAgency.Address,
-            Phone = savedAgency.Phone,
-            Email = savedAgency.Email,
+            ContactInfo = savedAgency.Description ?? string.Empty,
+            Address = string.Empty, // These will come from UserProfile when we have users
+            Phone = string.Empty,
+            Email = string.Empty,
             CreatedAt = savedAgency.CreatedAt
         };
     }

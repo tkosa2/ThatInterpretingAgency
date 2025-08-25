@@ -58,7 +58,7 @@ public class InterpreterRepository : IInterpreterRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Interpreter?> GetByAgencyAndUserIdAsync(Guid agencyId, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<Interpreter?> GetByAgencyAndUserIdAsync(Guid agencyId, string userId, CancellationToken cancellationToken = default)
     {
         return await _context.Interpreters
             .Include(i => i.Availability)

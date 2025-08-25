@@ -6,7 +6,7 @@ namespace ThatInterpretingAgency.Core.Application.Commands.CreateInvoice;
 public record CreateInvoiceCommand : IRequest<CreateInvoiceResponse>
 {
     public Guid AgencyId { get; init; }
-    public Guid ClientId { get; init; }
+    public string ClientId { get; init; } = string.Empty; // Changed to string to match UserId
     public Guid AppointmentId { get; init; }
     public string QuickBooksInvoiceId { get; init; } = string.Empty;
     public DateTime? DueDate { get; init; }
@@ -19,7 +19,7 @@ public record CreateInvoiceResponse
 {
     public Guid InvoiceId { get; init; }
     public Guid AgencyId { get; init; }
-    public Guid ClientId { get; init; }
+    public string ClientId { get; init; } = string.Empty; // Changed to string to match UserId
     public Guid AppointmentId { get; init; }
     public string QuickBooksInvoiceId { get; init; } = string.Empty;
     public string Status { get; init; } = string.Empty;

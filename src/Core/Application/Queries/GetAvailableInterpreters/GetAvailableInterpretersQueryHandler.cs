@@ -42,7 +42,7 @@ public class GetAvailableInterpretersQueryHandler : IRequestHandler<GetAvailable
         {
             // Check if interpreter has availability during the requested time
             var hasAvailability = await CheckInterpreterAvailability(
-                interpreter.Id, 
+                interpreter.UserId, 
                 request.StartTime, 
                 request.EndTime, 
                 cancellationToken);
@@ -50,7 +50,7 @@ public class GetAvailableInterpretersQueryHandler : IRequestHandler<GetAvailable
             if (hasAvailability)
             {
                 var availableSlots = await GetAvailableSlots(
-                    interpreter.Id, 
+                    interpreter.UserId, 
                     request.StartTime, 
                     request.EndTime, 
                     cancellationToken);
@@ -58,7 +58,7 @@ public class GetAvailableInterpretersQueryHandler : IRequestHandler<GetAvailable
                 var interpreterDto = new AvailableInterpreterDto
                 {
                     Id = interpreter.Id,
-                    FullName = interpreter.FullName,
+                    FullName = string.Empty, // This will come from UserProfile when we have users
                     Skills = interpreter.Skills,
                     AvailableSlots = availableSlots,
                     HourlyRate = null // TODO: Add hourly rate to interpreter entity
@@ -74,14 +74,14 @@ public class GetAvailableInterpretersQueryHandler : IRequestHandler<GetAvailable
         };
     }
 
-    private async Task<bool> CheckInterpreterAvailability(Guid interpreterId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken)
+    private async Task<bool> CheckInterpreterAvailability(string interpreterId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken)
     {
         // Check for conflicting appointments
         var hasOverlapping = await _appointmentRepository.HasOverlappingAppointmentsAsync(interpreterId, startTime, endTime, cancellationToken);
         return !hasOverlapping;
     }
 
-    private async Task<List<AvailabilitySlotDto>> GetAvailableSlots(Guid interpreterId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken)
+    private async Task<List<AvailabilitySlotDto>> GetAvailableSlots(string interpreterId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken)
     {
         // For now, return the requested time slot as available
         // TODO: Implement proper availability slot logic

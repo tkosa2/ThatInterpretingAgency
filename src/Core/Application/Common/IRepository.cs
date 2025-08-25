@@ -23,19 +23,19 @@ public interface IAgencyRepository : IRepository<ThatInterpretingAgency.Core.Dom
 public interface IInterpreterRepository : IRepository<ThatInterpretingAgency.Core.Domain.Entities.Interpreter>
 {
     Task<IEnumerable<ThatInterpretingAgency.Core.Domain.Entities.Interpreter>> GetByAgencyIdAsync(Guid agencyId, CancellationToken cancellationToken = default);
-    Task<ThatInterpretingAgency.Core.Domain.Entities.Interpreter?> GetByAgencyAndUserIdAsync(Guid agencyId, Guid userId, CancellationToken cancellationToken = default);
+    Task<ThatInterpretingAgency.Core.Domain.Entities.Interpreter?> GetByAgencyAndUserIdAsync(Guid agencyId, string userId, CancellationToken cancellationToken = default);
 }
 
 public interface IClientRepository : IRepository<ThatInterpretingAgency.Core.Domain.Entities.Client>
 {
-    Task<ThatInterpretingAgency.Core.Domain.Entities.Client?> GetByAgencyAndUserIdAsync(Guid agencyId, Guid userId, CancellationToken cancellationToken = default);
+    Task<ThatInterpretingAgency.Core.Domain.Entities.Client?> GetByAgencyAndUserIdAsync(Guid agencyId, string userId, CancellationToken cancellationToken = default);
 }
 
 public interface IAppointmentRepository : IRepository<ThatInterpretingAgency.Core.Domain.Aggregates.AppointmentAggregate>
 {
     Task<IEnumerable<ThatInterpretingAgency.Core.Domain.Aggregates.AppointmentAggregate>> GetByAgencyIdAsync(Guid agencyId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<ThatInterpretingAgency.Core.Domain.Aggregates.AppointmentAggregate>> GetByInterpreterIdAsync(Guid interpreterId, CancellationToken cancellationToken = default);
-    Task<bool> HasOverlappingAppointmentsAsync(Guid interpreterId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ThatInterpretingAgency.Core.Domain.Aggregates.AppointmentAggregate>> GetByInterpreterIdAsync(string interpreterId, CancellationToken cancellationToken = default);
+    Task<bool> HasOverlappingAppointmentsAsync(string interpreterId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken = default);
 }
 
 public interface IInvoiceRepository : IRepository<ThatInterpretingAgency.Core.Domain.Aggregates.InvoiceAggregate>

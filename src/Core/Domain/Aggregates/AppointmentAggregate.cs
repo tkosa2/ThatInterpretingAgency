@@ -6,8 +6,8 @@ namespace ThatInterpretingAgency.Core.Domain.Aggregates;
 public class AppointmentAggregate : AggregateRoot
 {
     public Guid AgencyId { get; private set; }
-    public Guid InterpreterId { get; private set; }
-    public Guid ClientId { get; private set; }
+    public string InterpreterId { get; private set; } = string.Empty; // Changed to string to match UserId
+    public string ClientId { get; private set; } = string.Empty; // Changed to string to match UserId
     public DateTime StartTime { get; private set; }
     public DateTime EndTime { get; private set; }
     public string TimeZone { get; private set; } = string.Empty;
@@ -22,8 +22,8 @@ public class AppointmentAggregate : AggregateRoot
 
     public static AppointmentAggregate Create(
         Guid agencyId, 
-        Guid interpreterId, 
-        Guid clientId, 
+        string interpreterId, 
+        string clientId, 
         DateTime startTime, 
         DateTime endTime, 
         string timeZone,
@@ -32,6 +32,12 @@ public class AppointmentAggregate : AggregateRoot
         decimal? rate = null,
         string? notes = null)
     {
+        if (string.IsNullOrWhiteSpace(interpreterId))
+            throw new ArgumentException("Interpreter ID cannot be empty", nameof(interpreterId));
+
+        if (string.IsNullOrWhiteSpace(clientId))
+            throw new ArgumentException("Client ID cannot be empty", nameof(clientId));
+
         if (startTime >= endTime)
             throw new ArgumentException("Start time must be before end time", nameof(startTime));
 
@@ -44,8 +50,8 @@ public class AppointmentAggregate : AggregateRoot
         var appointment = new AppointmentAggregate
         {
             AgencyId = agencyId,
-            InterpreterId = interpreterId,
-            ClientId = clientId,
+            InterpreterId = interpreterId.Trim(),
+            ClientId = clientId.Trim(),
             StartTime = startTime,
             EndTime = endTime,
             TimeZone = timeZone.Trim(),

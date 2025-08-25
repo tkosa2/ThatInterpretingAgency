@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using ThatInterpretingAgency.Core.Domain.Aggregates;
 using ThatInterpretingAgency.Core.Domain.Entities;
 using ThatInterpretingAgency.Core.Domain.ValueObjects;
+using ThatInterpretingAgency.Core.Domain.Common;
 
 namespace ThatInterpretingAgency.Infrastructure.Persistence;
 
@@ -37,16 +38,78 @@ public class SeedDataService
 
             _context.Agencies.AddRange(agency1, agency2);
 
+            // Seed UserProfiles
+            var userProfile1 = UserProfile.Create(
+                "user1@example.com", // This would be the actual AspNetUsers.Id
+                "Dr. Sarah",
+                "Johnson",
+                mailingAddress: "123 Medical Center Dr",
+                city: "Springfield",
+                state: "IL",
+                zipCode: "62701"
+            );
+
+            var userProfile2 = UserProfile.Create(
+                "user2@example.com",
+                "Attorney Mike",
+                "Davis",
+                mailingAddress: "456 Legal Ave",
+                city: "Chicago",
+                state: "IL",
+                zipCode: "60601"
+            );
+
+            var userProfile3 = UserProfile.Create(
+                "user3@example.com",
+                "Maria",
+                "Rodriguez",
+                mailingAddress: "789 Business Blvd",
+                city: "Miami",
+                state: "FL",
+                zipCode: "33101"
+            );
+
+            var userProfile4 = UserProfile.Create(
+                "user4@example.com",
+                "Carlos",
+                "Mendez",
+                mailingAddress: "321 Interpreter St",
+                city: "Los Angeles",
+                state: "CA",
+                zipCode: "90001"
+            );
+
+            var userProfile5 = UserProfile.Create(
+                "user5@example.com",
+                "Marie",
+                "Dubois",
+                mailingAddress: "654 Language Ln",
+                city: "New Orleans",
+                state: "LA",
+                zipCode: "70112"
+            );
+
+            var userProfile6 = UserProfile.Create(
+                "user6@example.com",
+                "Ana",
+                "Silva",
+                mailingAddress: "987 Translation Tr",
+                city: "San Antonio",
+                state: "TX",
+                zipCode: "78201"
+            );
+
+            _context.UserProfiles.AddRange(userProfile1, userProfile2, userProfile3, userProfile4, userProfile5, userProfile6);
+
             // Seed Clients
             var client1 = Client.Create(
                 agency1.Id,
-                Guid.NewGuid(),
+                "user1@example.com",
                 "City General Hospital",
                 new Dictionary<string, string>
                 {
                     { "PreferredLanguage", "Spanish" },
                     { "MedicalSpecialty", "Cardiology" },
-                    { "ContactPerson", "Dr. Sarah Johnson" },
                     { "PhoneNumber", "+1-555-0101" },
                     { "Email", "dr.johnson@cityhospital.com" }
                 }
@@ -54,13 +117,12 @@ public class SeedDataService
 
             var client2 = Client.Create(
                 agency1.Id,
-                Guid.NewGuid(),
+                "user2@example.com",
                 "Davis & Associates Law Firm",
                 new Dictionary<string, string>
                 {
                     { "PreferredLanguage", "French" },
                     { "LegalSpecialty", "Criminal Defense" },
-                    { "ContactPerson", "Attorney Mike Davis" },
                     { "PhoneNumber", "+1-555-0102" },
                     { "Email", "mike.davis@davislaw.com" }
                 }
@@ -68,13 +130,12 @@ public class SeedDataService
 
             var client3 = Client.Create(
                 agency2.Id,
-                Guid.NewGuid(),
+                "user3@example.com",
                 "International Business Corp",
                 new Dictionary<string, string>
                 {
                     { "PreferredLanguage", "Portuguese" },
                     { "BusinessType", "Import/Export" },
-                    { "ContactPerson", "Maria Rodriguez" },
                     { "PhoneNumber", "+1-555-0103" },
                     { "Email", "m.rodriguez@ibcorp.com" }
                 }
@@ -85,22 +146,19 @@ public class SeedDataService
             // Seed Interpreters
             var interpreter1 = Interpreter.Create(
                 agency1.Id,
-                Guid.NewGuid(),
-                "Carlos Mendez",
+                "user4@example.com",
                 new List<string> { "Spanish", "English" }
             );
 
             var interpreter2 = Interpreter.Create(
                 agency1.Id,
-                Guid.NewGuid(),
-                "Marie Dubois",
+                "user5@example.com",
                 new List<string> { "French", "English" }
             );
 
             var interpreter3 = Interpreter.Create(
                 agency2.Id,
-                Guid.NewGuid(),
-                "Ana Silva",
+                "user6@example.com",
                 new List<string> { "Portuguese", "Spanish", "English" }
             );
 

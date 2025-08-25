@@ -14,7 +14,7 @@ public interface IQuickBooksService
 
 public record CreateInvoiceRequest
 {
-    public Guid ClientId { get; init; }
+    public string ClientId { get; init; } = string.Empty; // Changed to string to match UserId
     public Guid AppointmentId { get; init; }
     public string ClientName { get; init; } = string.Empty;
     public string ClientEmail { get; init; } = string.Empty;

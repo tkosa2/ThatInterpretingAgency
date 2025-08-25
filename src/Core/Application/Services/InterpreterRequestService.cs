@@ -225,8 +225,8 @@ public class InterpreterRequestService : IInterpreterRequestService
             InvoiceApprover = request.InvoiceApprover,
             SupportingMaterials = request.SupportingMaterials,
             CreatedAt = request.CreatedAt,
-            RequestorName = request.Requestor?.ContactPerson,
-            OrganizationName = request.Requestor?.OrganizationName
+            RequestorName = string.Empty, // This will come from UserProfile when we have users
+            OrganizationName = request.Requestor?.OrganizationName ?? string.Empty
         };
     }
 }

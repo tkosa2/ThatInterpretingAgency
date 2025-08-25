@@ -6,8 +6,8 @@ namespace ThatInterpretingAgency.Core.Application.Commands.BookAppointment;
 public record BookAppointmentCommand : IRequest<BookAppointmentResponse>
 {
     public Guid AgencyId { get; init; }
-    public Guid InterpreterId { get; init; }
-    public Guid ClientId { get; init; }
+    public string InterpreterId { get; init; } = string.Empty; // Changed to string to match UserId
+    public string ClientId { get; init; } = string.Empty; // Changed to string to match UserId
     public DateTime StartTime { get; init; }
     public DateTime EndTime { get; init; }
     public string TimeZone { get; init; } = string.Empty;
@@ -21,8 +21,8 @@ public record BookAppointmentResponse
 {
     public Guid AppointmentId { get; init; }
     public Guid AgencyId { get; init; }
-    public Guid InterpreterId { get; init; }
-    public Guid ClientId { get; init; }
+    public string InterpreterId { get; init; } = string.Empty; // Changed to string to match UserId
+    public string ClientId { get; init; } = string.Empty; // Changed to string to match UserId
     public DateTime StartTime { get; init; }
     public DateTime EndTime { get; init; }
     public string TimeZone { get; init; } = string.Empty;

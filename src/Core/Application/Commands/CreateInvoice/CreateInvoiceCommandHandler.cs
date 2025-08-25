@@ -68,7 +68,7 @@ public class CreateInvoiceCommandHandler : IRequestHandler<CreateInvoiceCommand,
             ClientId = request.ClientId,
             AppointmentId = request.AppointmentId,
             ClientName = client.OrganizationName,
-            ClientEmail = client.Email ?? "no-email@example.com",
+            ClientEmail = string.Empty, // This will come from UserProfile when we have users
             AppointmentDate = appointment.StartTime,
             Duration = appointment.Duration,
             Amount = request.Amount ?? 0,

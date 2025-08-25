@@ -5,7 +5,7 @@ namespace ThatInterpretingAgency.Core.Domain.Aggregates;
 public class InvoiceAggregate : AggregateRoot
 {
     public Guid AgencyId { get; private set; }
-    public Guid ClientId { get; private set; }
+    public string ClientId { get; private set; } = string.Empty; // Changed to string to match UserId
     public Guid AppointmentId { get; private set; }
     public string QuickBooksInvoiceId { get; private set; } = string.Empty;
     public InvoiceStatus Status { get; private set; }
@@ -18,7 +18,7 @@ public class InvoiceAggregate : AggregateRoot
 
     public static InvoiceAggregate Create(
         Guid agencyId, 
-        Guid clientId, 
+        string clientId, 
         Guid appointmentId, 
         string quickBooksInvoiceId,
         DateTime? dueDate = null,
@@ -26,13 +26,16 @@ public class InvoiceAggregate : AggregateRoot
         string? currency = null,
         string? notes = null)
     {
+        if (string.IsNullOrWhiteSpace(clientId))
+            throw new ArgumentException("Client ID cannot be empty", nameof(clientId));
+
         if (string.IsNullOrWhiteSpace(quickBooksInvoiceId))
             throw new ArgumentException("QuickBooks invoice ID cannot be empty", nameof(quickBooksInvoiceId));
 
         var invoice = new InvoiceAggregate
         {
             AgencyId = agencyId,
-            ClientId = clientId,
+            ClientId = clientId.Trim(),
             AppointmentId = appointmentId,
             QuickBooksInvoiceId = quickBooksInvoiceId.Trim(),
             Status = InvoiceStatus.Draft,

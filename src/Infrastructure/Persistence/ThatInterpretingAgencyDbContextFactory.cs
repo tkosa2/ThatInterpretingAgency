@@ -9,9 +9,8 @@ public class ThatInterpretingAgencyDbContextFactory : IDesignTimeDbContextFactor
     {
         var optionsBuilder = new DbContextOptionsBuilder<ThatInterpretingAgencyDbContext>();
         
-        // Use a connection string that can be resolved at design time
-        // You can modify this connection string as needed for your environment
-        var connectionString = "Server=(localdb)\\mssqllocaldb;Database=ThatInterpretingAgency;Trusted_Connection=true;MultipleActiveResultSets=true";
+        // Use the same connection string as the application
+        var connectionString = "Server=localhost;Database=ThatInterpretingAgency;Trusted_Connection=true;MultipleActiveResultSets=true;TrustServerCertificate=true;Encrypt=false";
         
         optionsBuilder.UseSqlServer(connectionString);
 

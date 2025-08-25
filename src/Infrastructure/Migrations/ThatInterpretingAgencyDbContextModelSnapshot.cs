@@ -226,30 +226,17 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Address")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("ContactInfo")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -279,8 +266,9 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<Guid>("ClientId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -288,8 +276,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("EndTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("InterpreterId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("InterpreterId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Language")
                         .HasMaxLength(50)
@@ -345,8 +334,9 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("AppointmentId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("ClientId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -411,10 +401,14 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("AgencyId", "UserId", "Role")
                         .IsUnique();
@@ -431,25 +425,13 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("AgencyId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ContactPerson")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("OrganizationName")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Preferences")
                         .IsRequired()
@@ -462,10 +444,14 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("AgencyId", "UserId")
                         .IsUnique();
@@ -482,13 +468,12 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("AgencyId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Availability")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Skills")
                         .IsRequired()
@@ -501,10 +486,14 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("AgencyId", "UserId")
                         .IsUnique();
@@ -684,41 +673,67 @@ namespace Infrastructure.Migrations
                     b.ToTable("Notifications");
                 });
 
-            modelBuilder.Entity("ThatInterpretingAgency.Core.Domain.ValueObjects.AvailabilitySlot", b =>
+            modelBuilder.Entity("ThatInterpretingAgency.Core.Domain.Entities.UserProfile", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("EndTime")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Notes")
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MailingAddress")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTime>("StartTime")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("MiddleName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("PhysicalAddress")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
-                    b.Property<string>("TimeZone")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<string>("State")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ZipCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("StartTime", "EndTime");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
-                    b.ToTable("AvailabilitySlots");
+                    b.ToTable("UserProfiles");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -779,6 +794,15 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("AgencyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ThatInterpretingAgency.Core.Domain.Entities.UserProfile", "UserProfile")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .HasPrincipalKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("ThatInterpretingAgency.Core.Domain.Entities.Client", b =>
@@ -788,6 +812,15 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("AgencyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ThatInterpretingAgency.Core.Domain.Entities.UserProfile", "UserProfile")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .HasPrincipalKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("ThatInterpretingAgency.Core.Domain.Entities.Interpreter", b =>
@@ -797,6 +830,15 @@ namespace Infrastructure.Migrations
                         .HasForeignKey("AgencyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ThatInterpretingAgency.Core.Domain.Entities.UserProfile", "UserProfile")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .HasPrincipalKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("ThatInterpretingAgency.Core.Domain.Entities.InterpreterRequest", b =>
@@ -825,15 +867,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Requestor");
                 });
 
-            modelBuilder.Entity("ThatInterpretingAgency.Core.Domain.ValueObjects.AvailabilitySlot", b =>
-                {
-                    b.HasOne("ThatInterpretingAgency.Core.Domain.Entities.Interpreter", null)
-                        .WithMany("Availability")
-                        .HasForeignKey("Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ThatInterpretingAgency.Core.Domain.Aggregates.AgencyAggregate", b =>
                 {
                     b.Navigation("Clients");
@@ -841,11 +874,6 @@ namespace Infrastructure.Migrations
                     b.Navigation("Interpreters");
 
                     b.Navigation("Staff");
-                });
-
-            modelBuilder.Entity("ThatInterpretingAgency.Core.Domain.Entities.Interpreter", b =>
-                {
-                    b.Navigation("Availability");
                 });
 #pragma warning restore 612, 618
         }

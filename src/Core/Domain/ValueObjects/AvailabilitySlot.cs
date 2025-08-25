@@ -2,7 +2,7 @@ using ThatInterpretingAgency.Core.Domain.Common;
 
 namespace ThatInterpretingAgency.Core.Domain.ValueObjects;
 
-public class AvailabilitySlot : Entity
+public class AvailabilitySlot : ValueObject
 {
     public DateTime StartTime { get; private set; }
     public DateTime EndTime { get; private set; }
@@ -37,19 +37,16 @@ public class AvailabilitySlot : Entity
 
         StartTime = startTime;
         EndTime = endTime;
-        UpdateTimestamp();
     }
 
     public void UpdateStatus(AvailabilityStatus newStatus)
     {
         Status = newStatus;
-        UpdateTimestamp();
     }
 
     public void UpdateNotes(string? notes)
     {
         Notes = notes?.Trim();
-        UpdateTimestamp();
     }
 
     public bool OverlapsWith(AvailabilitySlot other)
@@ -63,6 +60,15 @@ public class AvailabilitySlot : Entity
     }
 
     public TimeSpan Duration => EndTime - StartTime;
+
+    protected override IEnumerable<object> GetEqualityComponents()
+    {
+        yield return StartTime;
+        yield return EndTime;
+        yield return TimeZone;
+        yield return Status;
+        yield return Notes ?? string.Empty;
+    }
 }
 
 public enum AvailabilityStatus

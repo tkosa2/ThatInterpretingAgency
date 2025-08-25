@@ -6,10 +6,7 @@ namespace ThatInterpretingAgency.Core.Domain.Aggregates;
 public class AgencyAggregate : AggregateRoot
 {
     public string Name { get; private set; } = string.Empty;
-    public string ContactInfo { get; private set; } = string.Empty;
-    public string Address { get; private set; } = string.Empty;
-    public string Phone { get; private set; } = string.Empty;
-    public string Email { get; private set; } = string.Empty;
+    public string? Description { get; private set; }
     public AgencyStatus Status { get; private set; }
     public List<AgencyStaff> Staff { get; private set; } = new();
     public List<Interpreter> Interpreters { get; private set; } = new();
@@ -17,34 +14,19 @@ public class AgencyAggregate : AggregateRoot
 
     private AgencyAggregate() { }
 
-    public static AgencyAggregate Create(string name, string contactInfo, string address = "", string phone = "", string email = "")
+    public static AgencyAggregate Create(string name, string? description = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Agency name cannot be empty", nameof(name));
 
-        if (string.IsNullOrWhiteSpace(contactInfo))
-            throw new ArgumentException("Contact info cannot be empty", nameof(contactInfo));
-
         var agency = new AgencyAggregate
         {
             Name = name.Trim(),
-            ContactInfo = contactInfo.Trim(),
-            Address = address?.Trim() ?? string.Empty,
-            Phone = phone?.Trim() ?? string.Empty,
-            Email = email?.Trim() ?? string.Empty,
+            Description = description?.Trim(),
             Status = AgencyStatus.Active
         };
 
         return agency;
-    }
-
-    public void UpdateContactInfo(string contactInfo)
-    {
-        if (string.IsNullOrWhiteSpace(contactInfo))
-            throw new ArgumentException("Contact info cannot be empty", nameof(contactInfo));
-
-        ContactInfo = contactInfo.Trim();
-        UpdateTimestamp();
     }
 
     public void UpdateName(string name)
@@ -56,21 +38,9 @@ public class AgencyAggregate : AggregateRoot
         UpdateTimestamp();
     }
 
-    public void UpdateAddress(string address)
+    public void UpdateDescription(string? description)
     {
-        Address = address?.Trim() ?? string.Empty;
-        UpdateTimestamp();
-    }
-
-    public void UpdatePhone(string phone)
-    {
-        Phone = phone?.Trim() ?? string.Empty;
-        UpdateTimestamp();
-    }
-
-    public void UpdateEmail(string email)
-    {
-        Email = email?.Trim() ?? string.Empty;
+        Description = description?.Trim();
         UpdateTimestamp();
     }
 
@@ -86,8 +56,11 @@ public class AgencyAggregate : AggregateRoot
         UpdateTimestamp();
     }
 
-    public void AddStaff(Guid userId, string role, DateTime hireDate)
+    public void AddStaff(string userId, string role, DateTime hireDate)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
+
         if (Staff.Any(s => s.UserId == userId && s.Role == role))
             throw new InvalidOperationException($"User {userId} already has role {role} in this agency");
 
@@ -96,7 +69,7 @@ public class AgencyAggregate : AggregateRoot
         UpdateTimestamp();
     }
 
-    public void RemoveStaff(Guid userId, string role)
+    public void RemoveStaff(string userId, string role)
     {
         var staff = Staff.FirstOrDefault(s => s.UserId == userId && s.Role == role);
         if (staff != null)
@@ -106,18 +79,24 @@ public class AgencyAggregate : AggregateRoot
         }
     }
 
-    public void AddInterpreter(Guid userId, string fullName, List<string> skills)
+    public void AddInterpreter(string userId, List<string> skills)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
+
         if (Interpreters.Any(i => i.UserId == userId))
             throw new InvalidOperationException($"User {userId} is already an interpreter in this agency");
 
-        var interpreter = Interpreter.Create(Id, userId, fullName, skills);
+        var interpreter = Interpreter.Create(Id, userId, skills);
         Interpreters.Add(interpreter);
         UpdateTimestamp();
     }
 
-    public void AddClient(Guid userId, string organizationName, Dictionary<string, string> preferences)
+    public void AddClient(string userId, string organizationName, Dictionary<string, string> preferences)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("User ID cannot be empty", nameof(userId));
+
         if (Clients.Any(c => c.UserId == userId))
             throw new InvalidOperationException($"User {userId} is already a client in this agency");
 

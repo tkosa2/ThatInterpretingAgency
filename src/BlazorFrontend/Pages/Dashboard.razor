@@ -1,0 +1,240 @@
+@page "/dashboard"
+@using BlazorFrontend.Data
+@using BlazorFrontend.Services
+@inject IBffDashboardService DashboardService
+@inject ILogger<Dashboard> Logger
+
+<PageTitle>Dashboard - THAT Interpreting Agency</PageTitle>
+
+<div class="container-fluid">
+    <h2>Dashboard</h2>
+    
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading dashboard data...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @errorMessage
+            <button class="btn btn-sm btn-outline-danger ms-2" @onclick="LoadDashboard">Retry</button>
+        </div>
+    }
+    else if (dashboardData != null)
+    {
+        <!-- Key Metrics Row -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card bg-primary text-white">
+                    <div class="card-body text-center">
+                        <h3>@dashboardData.TotalAgencies</h3>
+                        <p class="mb-0">Agencies</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-success text-white">
+                    <div class="card-body text-center">
+                        <h3>@dashboardData.TotalInterpreters</h3>
+                        <p class="mb-0">Interpreters</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-info text-white">
+                    <div class="card-body text-center">
+                        <h3>@dashboardData.TotalClients</h3>
+                        <p class="mb-0">Clients</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-warning text-white">
+                    <div class="card-body text-center">
+                        <h3>@dashboardData.TotalAppointments</h3>
+                        <p class="mb-0">Appointments</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-secondary text-white">
+                    <div class="card-body text-center">
+                        <h3>@dashboardData.PendingInterpreterRequests</h3>
+                        <p class="mb-0">Pending Requests</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-dark text-white">
+                    <div class="card-body text-center">
+                        <h3>$@dashboardData.TotalRevenue.ToString("N0")</h3>
+                        <p class="mb-0">Total Revenue</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity Row -->
+        <div class="row">
+            <!-- Recent Appointments -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Recent Appointments</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (dashboardData.RecentAppointments.Any())
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var appointment in dashboardData.RecentAppointments.Take(5))
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">@appointment.InterpreterName → @appointment.ClientName</h6>
+                                            <small class="text-muted">@appointment.StartTime.ToString("MMM dd, yyyy")</small>
+                                        </div>
+                                        <p class="mb-1">@appointment.AgencyName</p>
+                                        <small class="text-muted">Status: @appointment.Status | Amount: $@appointment.Amount.ToString("N2")</small>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No recent appointments</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Appointments -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Upcoming Appointments</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (dashboardData.UpcomingAppointments.Any())
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var appointment in dashboardData.UpcomingAppointments.Take(5))
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">@appointment.InterpreterName → @appointment.ClientName</h6>
+                                            <small class="text-muted">@appointment.StartTime.ToString("MMM dd, yyyy")</small>
+                                        </div>
+                                        <p class="mb-1">@appointment.AgencyName - @appointment.Location</p>
+                                        <small class="text-muted">Language: @appointment.Language</small>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No upcoming appointments</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Requests Row -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Recent Interpreter Requests</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (dashboardData.RecentRequests.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Client</th>
+                                            <th>Agency</th>
+                                            <th>Language</th>
+                                            <th>Requested Date</th>
+                                            <th>Status</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var request in dashboardData.RecentRequests.Take(10))
+                                        {
+                                            <tr>
+                                                <td>@request.ClientName</td>
+                                                <td>@request.AgencyName</td>
+                                                <td>@request.Language</td>
+                                                <td>@request.RequestedDate.ToString("MMM dd, yyyy")</td>
+                                                <td>
+                                                    <span class="badge bg-@(GetStatusColor(request.Status))">@request.Status</span>
+                                                </td>
+                                                <td>@(request.Description.Length > 50 ? request.Description.Substring(0, 50) + "..." : request.Description)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted">No recent interpreter requests</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private BffDashboardDTO? dashboardData;
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboard();
+    }
+
+    private async Task LoadDashboard()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            dashboardData = await DashboardService.GetDashboardAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading dashboard data");
+            errorMessage = "Failed to load dashboard data. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetStatusColor(string status)
+    {
+        return status.ToLower() switch
+        {
+            "pending" => "warning",
+            "approved" => "success",
+            "rejected" => "danger",
+            "completed" => "info",
+            _ => "secondary"
+        };
+    }
+}
+

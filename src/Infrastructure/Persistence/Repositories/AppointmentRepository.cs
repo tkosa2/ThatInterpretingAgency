@@ -54,14 +54,14 @@ public class AppointmentRepository : IAppointmentRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<AppointmentAggregate>> GetByInterpreterIdAsync(Guid interpreterId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<AppointmentAggregate>> GetByInterpreterIdAsync(string interpreterId, CancellationToken cancellationToken = default)
     {
         return await _context.Appointments
             .Where(a => a.InterpreterId == interpreterId)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<bool> HasOverlappingAppointmentsAsync(Guid interpreterId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken = default)
+    public async Task<bool> HasOverlappingAppointmentsAsync(string interpreterId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken = default)
     {
         return await _context.Appointments
             .AnyAsync(a => a.InterpreterId == interpreterId && 

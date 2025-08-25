@@ -11,6 +11,15 @@ public interface IApiService
     Task<List<T>> GetListAsync<T>(string endpoint);
 }
 
+public interface IBffService
+{
+    Task<T?> GetAsync<T>(string endpoint);
+    Task<T?> PostAsync<T>(string endpoint, object data);
+    Task<T?> PutAsync<T>(string endpoint, object data);
+    Task<bool> DeleteAsync(string endpoint);
+    Task<List<T>> GetListAsync<T>(string endpoint);
+}
+
 public interface IAgencyService
 {
     Task<List<AgencyData>> GetAgenciesAsync();
