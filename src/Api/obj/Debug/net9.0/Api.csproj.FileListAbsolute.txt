@@ -165,3 +165,4 @@ C:\projects\ThatInterpretingAgency\src\Api\obj\Debug\net9.0\refint\Api.dll
 C:\projects\ThatInterpretingAgency\src\Api\obj\Debug\net9.0\Api.pdb
 C:\projects\ThatInterpretingAgency\src\Api\obj\Debug\net9.0\Api.genruntimeconfig.cache
 C:\projects\ThatInterpretingAgency\src\Api\obj\Debug\net9.0\ref\Api.dll
+C:\projects\ThatInterpretingAgency\src\Api\obj\Debug\net9.0\Api.sourcelink.json

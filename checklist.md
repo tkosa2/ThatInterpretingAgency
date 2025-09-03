@@ -25,8 +25,8 @@ This document outlines user stories for the THAT Interpreting Agency application
 **As an Agency Admin**, I want to assign users as staff (e.g., interpreters, admins) to an agency so that they can perform agency-specific tasks.
 
 **Acceptance Criteria**:
-- [] Backend: Add a user to AgencyStaff table with AgencyId, UserId, Role (e.g., Interpreter, Admin), HireDate, and Status.
-- [] Backend: Validate user and agency exist; ensure no duplicate role assignment.
+- [X] Backend: Add a user to AgencyStaff table with AgencyId, UserId, Role (e.g., Interpreter, Admin), HireDate, and Status.
+- [X] Backend: Validate user and agency exist; ensure no duplicate role assignment.
 - [] Backend: Restrict to admins of the same agency.
 - [] Frontend: Create a Blazor Server component (e.g., `AssignStaff.razor`) with a dropdown for users and roles.
 - [] Frontend: Use `@inject HttpClient Http` to call POST /api/agency-staff, ensuring agency scoping.

@@ -1,5 +1,4 @@
 using ThatInterpretingAgency.Core.Domain.Common;
-using ThatInterpretingAgency.Core.Domain.ValueObjects;
 
 namespace ThatInterpretingAgency.Core.Domain.Entities;
 
@@ -9,10 +8,10 @@ public class Interpreter : Entity
     public string UserId { get; private set; } = string.Empty; // Changed to string to match AspNetUsers.Id
     public List<string> Skills { get; private set; } = new();
     public InterpreterStatus Status { get; private set; }
-    public List<AvailabilitySlot> Availability { get; private set; } = new();
 
     // Navigation properties
     public virtual UserProfile UserProfile { get; private set; } = null!;
+    public virtual ICollection<AvailabilitySlot> AvailabilitySlots { get; private set; } = new List<AvailabilitySlot>();
 
     private Interpreter() { }
 
@@ -48,7 +47,7 @@ public class Interpreter : Entity
         UpdateTimestamp();
     }
 
-    public void AddAvailabilitySlot(DateTime startTime, DateTime endTime, string timeZone)
+    public void AddAvailabilitySlot(DateTime startTime, DateTime endTime, string timeZone, string? notes = null)
     {
         if (startTime >= endTime)
             throw new ArgumentException("Start time must be before end time");
@@ -56,20 +55,17 @@ public class Interpreter : Entity
         if (startTime < DateTime.UtcNow)
             throw new ArgumentException("Start time cannot be in the past");
 
-        var slot = AvailabilitySlot.Create(startTime, endTime, timeZone);
-        Availability.Add(slot);
+        var slot = AvailabilitySlot.Create(Id, startTime, endTime, timeZone, notes);
+        AvailabilitySlots.Add(slot);
         UpdateTimestamp();
     }
 
-    public void RemoveAvailabilitySlot(DateTime startTime, DateTime endTime, string timeZone)
+    public void RemoveAvailabilitySlot(Guid slotId)
     {
-        var slot = Availability.FirstOrDefault(s => 
-            s.StartTime == startTime && 
-            s.EndTime == endTime && 
-            s.TimeZone == timeZone);
+        var slot = AvailabilitySlots.FirstOrDefault(s => s.Id == slotId);
         if (slot != null)
         {
-            Availability.Remove(slot);
+            AvailabilitySlots.Remove(slot);
             UpdateTimestamp();
         }
     }
@@ -81,10 +77,18 @@ public class Interpreter : Entity
 
         var requestedSlot = new { Start = startTime, End = endTime };
         
-        return Availability.Any(slot => 
+        return AvailabilitySlots.Any(slot => 
             slot.Status == AvailabilityStatus.Available &&
             slot.StartTime <= requestedSlot.Start &&
             slot.EndTime >= requestedSlot.End);
+    }
+
+    public IEnumerable<AvailabilitySlot> GetAvailableSlots(DateTime startTime, DateTime endTime)
+    {
+        return AvailabilitySlots.Where(slot => 
+            slot.Status == AvailabilityStatus.Available &&
+            slot.StartTime <= startTime &&
+            slot.EndTime >= endTime);
     }
 }
 

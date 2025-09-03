@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\projects\\ThatInterpretingAgency\\src\\Bff\\Bff.csproj": {}
+    "C:\\projects\\ThatInterpretingAgency\\src\\bff\\Bff.csproj": {}
   },
   "projects": {
-    "C:\\projects\\ThatInterpretingAgency\\src\\Bff\\Bff.csproj": {
+    "C:\\projects\\ThatInterpretingAgency\\src\\bff\\Bff.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\projects\\ThatInterpretingAgency\\src\\Bff\\Bff.csproj",
+        "projectUniqueName": "C:\\projects\\ThatInterpretingAgency\\src\\bff\\Bff.csproj",
         "projectName": "Bff",
-        "projectPath": "C:\\projects\\ThatInterpretingAgency\\src\\Bff\\Bff.csproj",
+        "projectPath": "C:\\projects\\ThatInterpretingAgency\\src\\bff\\Bff.csproj",
         "packagesPath": "C:\\Users\\Lizzie\\.nuget\\packages\\",
-        "outputPath": "C:\\projects\\ThatInterpretingAgency\\src\\Bff\\obj\\",
+        "outputPath": "C:\\projects\\ThatInterpretingAgency\\src\\bff\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

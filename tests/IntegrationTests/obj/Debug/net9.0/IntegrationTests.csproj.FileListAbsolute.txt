@@ -96,3 +96,4 @@ C:\projects\ThatInterpretingAgency\tests\IntegrationTests\obj\Debug\net9.0\refin
 C:\projects\ThatInterpretingAgency\tests\IntegrationTests\obj\Debug\net9.0\IntegrationTests.pdb
 C:\projects\ThatInterpretingAgency\tests\IntegrationTests\obj\Debug\net9.0\IntegrationTests.genruntimeconfig.cache
 C:\projects\ThatInterpretingAgency\tests\IntegrationTests\obj\Debug\net9.0\ref\IntegrationTests.dll
+C:\projects\ThatInterpretingAgency\tests\IntegrationTests\obj\Debug\net9.0\IntegrationTests.sourcelink.json

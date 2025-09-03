@@ -80,7 +80,7 @@ public class StaffController : ControllerBase
                 return NotFound($"Staff member with ID {id} not found");
 
             // Get user details from AspNetUsers
-            var user = await _userManager.FindByIdAsync(agencyStaff.UserId.ToString());
+            var user = await _userManager.FindByIdAsync(agencyStaff.UserId);
             if (user == null)
                 return NotFound($"User not found for staff member {id}");
 
@@ -129,7 +129,7 @@ public class StaffController : ControllerBase
             if (existingUser != null)
             {
                 // Check if user already has a role in this agency
-                if (await _agencyStaffRepository.UserHasRoleInAgencyAsync(Guid.Parse(existingUser.Id), defaultAgencyId, request.Role))
+                if (await _agencyStaffRepository.UserHasRoleInAgencyAsync(existingUser.Id, defaultAgencyId, request.Role))
                 {
                     return BadRequest(new { error = $"User with email '{request.Email}' already has role '{request.Role}' in this agency" });
                 }
@@ -164,7 +164,7 @@ public class StaffController : ControllerBase
             // Use the same defaultAgencyId from above
             var agencyStaff = AgencyStaff.Create(
                 agencyId: defaultAgencyId,
-                userId: Guid.Parse(newUser.Id),
+                userId: newUser.Id,
                 role: request.Role,
                 hireDate: request.HireDate
             );
@@ -215,7 +215,7 @@ public class StaffController : ControllerBase
                 return NotFound($"Staff member with ID {id} not found");
 
             // Get user details from AspNetUsers
-            var user = await _userManager.FindByIdAsync(agencyStaff.UserId.ToString());
+            var user = await _userManager.FindByIdAsync(agencyStaff.UserId);
             if (user == null)
                 return NotFound($"User not found for staff member {id}");
 

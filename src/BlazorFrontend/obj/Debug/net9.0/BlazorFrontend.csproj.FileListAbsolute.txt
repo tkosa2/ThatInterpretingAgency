@@ -172,3 +172,4 @@ C:\projects\ThatInterpretingAgency\src\BlazorFrontend\obj\Debug\net9.0\refint\Bl
 C:\projects\ThatInterpretingAgency\src\BlazorFrontend\obj\Debug\net9.0\BlazorFrontend.pdb
 C:\projects\ThatInterpretingAgency\src\BlazorFrontend\obj\Debug\net9.0\BlazorFrontend.genruntimeconfig.cache
 C:\projects\ThatInterpretingAgency\src\BlazorFrontend\obj\Debug\net9.0\ref\BlazorFrontend.dll
+C:\projects\ThatInterpretingAgency\src\BlazorFrontend\obj\Debug\net9.0\BlazorFrontend.sourcelink.json

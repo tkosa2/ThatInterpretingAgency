@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using ThatInterpretingAgency.Infrastructure.Persistence;
 using ThatInterpretingAgency.Infrastructure.Services;
 using ThatInterpretingAgency.Core.Application.Common;
+using ThatInterpretingAgency.Core.Application.Services;
 using ThatInterpretingAgency.Infrastructure.Persistence.Repositories;
 using MediatR;
 using System.Reflection;
@@ -38,6 +39,10 @@ builder.Services.AddScoped<IClientRepository, ClientRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IInterpreterRequestRepository, InterpreterRequestRepository>();
+builder.Services.AddScoped<IAvailabilitySlotRepository, AvailabilitySlotRepository>();
+
+// Add Calendar Integration services
+builder.Services.AddScoped<ICalendarIntegrationService, CalendarIntegrationService>();
 
 // Add Application services
 builder.Services.AddScoped<ThatInterpretingAgency.Core.Application.Common.IInterpreterRequestService, ThatInterpretingAgency.Core.Application.Services.InterpreterRequestService>();

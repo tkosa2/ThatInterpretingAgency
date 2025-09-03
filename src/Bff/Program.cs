@@ -1,7 +1,9 @@
 using Bff.Services;
 using ThatInterpretingAgency.Core.Application.Common;
+using ThatInterpretingAgency.Core.Application.Services;
 using ThatInterpretingAgency.Infrastructure.Persistence;
 using ThatInterpretingAgency.Infrastructure.Persistence.Repositories;
+using ThatInterpretingAgency.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +31,10 @@ builder.Services.AddScoped<IAgencyStaffRepository, AgencyStaffRepository>();
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<IInvoiceRepository, InvoiceRepository>();
 builder.Services.AddScoped<IInterpreterRequestRepository, InterpreterRequestRepository>();
+builder.Services.AddScoped<IAvailabilitySlotRepository, AvailabilitySlotRepository>();
+
+// Add Calendar Integration services
+builder.Services.AddScoped<ICalendarIntegrationService, CalendarIntegrationService>();
 
 // Add BFF Services
 builder.Services.AddScoped<IDashboardService, DashboardService>();

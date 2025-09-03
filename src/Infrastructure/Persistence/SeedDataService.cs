@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ThatInterpretingAgency.Core.Domain.Aggregates;
 using ThatInterpretingAgency.Core.Domain.Entities;
-using ThatInterpretingAgency.Core.Domain.ValueObjects;
 using ThatInterpretingAgency.Core.Domain.Common;
 
 namespace ThatInterpretingAgency.Infrastructure.Persistence;

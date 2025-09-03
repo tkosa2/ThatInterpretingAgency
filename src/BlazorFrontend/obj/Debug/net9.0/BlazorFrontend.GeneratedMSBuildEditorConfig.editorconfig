@@ -68,6 +68,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ3JlYXRlSW50ZXJwcmV0ZXJSZXF1ZXN0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/projects/ThatInterpretingAgency/src/BlazorFrontend/Pages/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGFzaGJvYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/projects/ThatInterpretingAgency/src/BlazorFrontend/Pages/EditAgency.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRWRpdEFnZW5jeS5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 

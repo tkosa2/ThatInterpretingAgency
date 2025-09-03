@@ -46,3 +46,4 @@ C:\projects\ThatInterpretingAgency\src\WorkerServices\obj\Debug\net9.0\refint\Wo
 C:\projects\ThatInterpretingAgency\src\WorkerServices\obj\Debug\net9.0\WorkerServices.pdb
 C:\projects\ThatInterpretingAgency\src\WorkerServices\obj\Debug\net9.0\WorkerServices.genruntimeconfig.cache
 C:\projects\ThatInterpretingAgency\src\WorkerServices\obj\Debug\net9.0\ref\WorkerServices.dll
+C:\projects\ThatInterpretingAgency\src\WorkerServices\obj\Debug\net9.0\WorkerServices.sourcelink.json

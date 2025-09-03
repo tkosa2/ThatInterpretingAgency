@@ -1,0 +1,65 @@
+### Test Calendar Integration Basic Functionality
+
+### 1. Get Calendar Providers
+GET https://localhost:7058/api/calendartest/providers
+Accept: application/json
+
+### 2. Create Test Availability Slot
+POST https://localhost:7058/api/calendartest/test-availability
+Content-Type: application/json
+
+{
+  "userId": "test-user-id",
+  "startTime": "2024-01-15T09:00:00Z",
+  "endTime": "2024-01-15T17:00:00Z",
+  "timeZone": "America/New_York"
+}
+
+### 3. Create Test Appointment (should succeed if no conflicts)
+POST https://localhost:7058/api/calendartest/test-appointment
+Content-Type: application/json
+
+{
+  "userId": "test-user-id",
+  "title": "Test Interpreting Session",
+  "startTime": "2024-01-15T10:00:00Z",
+  "endTime": "2024-01-15T12:00:00Z",
+  "timeZone": "America/New_York"
+}
+
+### 4. Create Conflicting Appointment (should fail)
+POST https://localhost:7058/api/calendartest/test-appointment
+Content-Type: application/json
+
+{
+  "userId": "test-user-id",
+  "title": "Conflicting Session",
+  "startTime": "2024-01-15T10:00:00Z",
+  "endTime": "2024-01-15T12:00:00Z",
+  "timeZone": "America/New_York"
+}
+
+### 5. Get User Events
+GET https://localhost:7058/api/calendartest/events/test-user-id?startTime=2024-01-15T00:00:00Z&endTime=2024-01-16T00:00:00Z
+Accept: application/json
+
+### 6. Get User Availability
+GET https://localhost:7058/api/calendartest/availability/test-user-id?startTime=2024-01-15T00:00:00Z&endTime=2024-01-16T00:00:00Z
+Accept: application/json
+
+### 7. Check for Conflicts
+GET https://localhost:7058/api/calendartest/conflicts/test-user-id?startTime=2024-01-15T10:00:00Z&endTime=2024-01-15T12:00:00Z
+Accept: application/json
+
+### 8. Create General Calendar Event
+POST https://localhost:7058/api/calendartest/events
+Content-Type: application/json
+
+{
+  "userId": "test-user-id",
+  "title": "General Meeting",
+  "startTime": "2024-01-16T14:00:00Z",
+  "endTime": "2024-01-16T15:00:00Z",
+  "timeZone": "America/New_York",
+  "eventType": "Custom"
+}

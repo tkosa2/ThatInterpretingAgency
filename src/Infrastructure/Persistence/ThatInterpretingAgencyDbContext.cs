@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ThatInterpretingAgency.Core.Domain.Aggregates;
 using ThatInterpretingAgency.Core.Domain.Entities;
-using ThatInterpretingAgency.Core.Domain.ValueObjects;
 using ThatInterpretingAgency.Core.Domain.Common;
 
 namespace ThatInterpretingAgency.Infrastructure.Persistence;
@@ -16,12 +15,22 @@ public class ThatInterpretingAgencyDbContext : IdentityDbContext
     public DbSet<AgencyAggregate> Agencies { get; set; }
     public DbSet<AgencyStaff> AgencyStaff { get; set; }
     public DbSet<Interpreter> Interpreters { get; set; }
+    public DbSet<AvailabilitySlot> AvailabilitySlots { get; set; }
     public DbSet<Client> Clients { get; set; }
     public DbSet<AppointmentAggregate> Appointments { get; set; }
     public DbSet<InvoiceAggregate> Invoices { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<InterpreterRequest> InterpreterRequests { get; set; }
     public DbSet<UserProfile> UserProfiles { get; set; }
+    
+    // Calendar Integration DbSets
+    public DbSet<CalendarProvider> CalendarProviders { get; set; }
+    public DbSet<UserCalendarConnection> UserCalendarConnections { get; set; }
+    public DbSet<CalendarEvent> CalendarEvents { get; set; }
+    public DbSet<CalendarEventAttendee> CalendarEventAttendees { get; set; }
+    public DbSet<CalendarSyncLog> CalendarSyncLogs { get; set; }
+    public DbSet<CalendarTemplate> CalendarTemplates { get; set; }
+    public DbSet<CalendarTemplateRule> CalendarTemplateRules { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -79,9 +88,6 @@ public class ThatInterpretingAgencyDbContext : IdentityDbContext
             entity.Property(e => e.Skills).HasConversion(
                 v => string.Join(',', v),
                 v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
-            entity.Property(e => e.Availability).HasConversion(
-                v => System.Text.Json.JsonSerializer.Serialize(v, (System.Text.Json.JsonSerializerOptions?)null),
-                v => System.Text.Json.JsonSerializer.Deserialize<List<AvailabilitySlot>>(v, (System.Text.Json.JsonSerializerOptions?)null) ?? new List<AvailabilitySlot>());
             entity.Property(e => e.Status).HasConversion<string>();
             entity.HasIndex(e => new { e.AgencyId, e.UserId }).IsUnique();
             
@@ -91,6 +97,26 @@ public class ThatInterpretingAgencyDbContext : IdentityDbContext
                 .HasForeignKey(d => d.UserId)
                 .HasPrincipalKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // AvailabilitySlot configuration
+        modelBuilder.Entity<AvailabilitySlot>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TimeZone).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Status).HasConversion<string>();
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            
+            // Configure relationship with Interpreter
+            entity.HasOne(e => e.Interpreter)
+                .WithMany(i => i.AvailabilitySlots)
+                .HasForeignKey(e => e.InterpreterId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            // Create indexes for performance
+            entity.HasIndex(e => new { e.InterpreterId, e.StartTime, e.EndTime });
+            entity.HasIndex(e => new { e.InterpreterId, e.Status });
+            entity.HasIndex(e => new { e.StartTime, e.EndTime });
         });
 
         // Client configuration
@@ -226,5 +252,131 @@ public class ThatInterpretingAgencyDbContext : IdentityDbContext
                 .HasForeignKey(e => e.AppointmentId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
+
+        // Calendar Integration Entity Configurations
+        
+        // CalendarProvider configuration
+        modelBuilder.Entity<CalendarProvider>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.ProviderType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ApiEndpoint).HasMaxLength(500);
+            entity.Property(e => e.ClientId).HasMaxLength(200);
+            entity.Property(e => e.ClientSecret).HasMaxLength(500);
+            entity.Property(e => e.Scopes).HasMaxLength(500);
+            entity.HasIndex(e => e.ProviderType);
+        });
+
+        // UserCalendarConnection configuration
+        modelBuilder.Entity<UserCalendarConnection>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).HasMaxLength(450).IsRequired();
+            entity.Property(e => e.ExternalCalendarId).HasMaxLength(200);
+            entity.Property(e => e.CalendarName).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.AccessToken).HasMaxLength(int.MaxValue);
+            entity.Property(e => e.RefreshToken).HasMaxLength(int.MaxValue);
+            entity.HasIndex(e => new { e.UserId, e.ProviderId });
+            entity.HasIndex(e => e.ExternalCalendarId);
+        });
+
+        // CalendarEvent configuration
+        modelBuilder.Entity<CalendarEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).HasMaxLength(450).IsRequired();
+            entity.Property(e => e.ExternalEventId).HasMaxLength(200);
+            entity.Property(e => e.Title).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(int.MaxValue);
+            entity.Property(e => e.Location).HasMaxLength(500);
+            entity.Property(e => e.TimeZone).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.EventType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.RecurrenceRule).HasMaxLength(500);
+            entity.Property(e => e.RecurrenceException).HasMaxLength(int.MaxValue);
+            entity.Property(e => e.Color).HasMaxLength(7);
+            entity.Property(e => e.ReminderMinutes);
+            entity.HasIndex(e => new { e.UserId, e.StartTimeUtc, e.EndTimeUtc });
+            entity.HasIndex(e => e.EventType);
+            entity.HasIndex(e => e.Status);
+        });
+
+        // CalendarEventAttendee configuration
+        modelBuilder.Entity<CalendarEventAttendee>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Name).HasMaxLength(200);
+            entity.Property(e => e.ResponseStatus).HasMaxLength(50).IsRequired();
+            entity.HasIndex(e => e.EventId);
+            entity.HasIndex(e => e.Email);
+        });
+
+        // CalendarSyncLog configuration
+        modelBuilder.Entity<CalendarSyncLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.SyncType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.Status).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.ErrorMessage).HasMaxLength(int.MaxValue);
+            entity.HasIndex(e => e.ConnectionId);
+            entity.HasIndex(e => e.StartTime);
+            entity.HasIndex(e => e.Status);
+        });
+
+        // CalendarTemplate configuration
+        modelBuilder.Entity<CalendarTemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserId).HasMaxLength(450).IsRequired();
+            entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(int.MaxValue);
+            entity.Property(e => e.TemplateType).HasMaxLength(50).IsRequired();
+            entity.HasIndex(e => new { e.UserId, e.TemplateType });
+        });
+
+        // CalendarTemplateRule configuration
+        modelBuilder.Entity<CalendarTemplateRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TimeZone).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.EventType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.StartTime).HasColumnType("time");
+            entity.Property(e => e.EndTime).HasColumnType("time");
+            entity.HasIndex(e => e.TemplateId);
+            entity.HasIndex(e => e.DayOfWeek);
+        });
+
+        // Calendar Integration Relationships
+        modelBuilder.Entity<UserCalendarConnection>()
+            .HasOne(e => e.Provider)
+            .WithMany(p => p.UserConnections)
+            .HasForeignKey(e => e.ProviderId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CalendarEvent>()
+            .HasOne(e => e.Connection)
+            .WithMany(c => c.CalendarEvents)
+            .HasForeignKey(e => e.ConnectionId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<CalendarEventAttendee>()
+            .HasOne(e => e.Event)
+            .WithMany(ev => ev.Attendees)
+            .HasForeignKey(e => e.EventId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CalendarSyncLog>()
+            .HasOne(e => e.Connection)
+            .WithMany(c => c.SyncLogs)
+            .HasForeignKey(e => e.ConnectionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<CalendarTemplateRule>()
+            .HasOne(e => e.Template)
+            .WithMany(t => t.Rules)
+            .HasForeignKey(e => e.TemplateId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

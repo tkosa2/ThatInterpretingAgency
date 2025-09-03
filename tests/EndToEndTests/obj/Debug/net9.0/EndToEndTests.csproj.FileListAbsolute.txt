@@ -96,3 +96,4 @@ C:\projects\ThatInterpretingAgency\tests\EndToEndTests\obj\Debug\net9.0\refint\E
 C:\projects\ThatInterpretingAgency\tests\EndToEndTests\obj\Debug\net9.0\EndToEndTests.pdb
 C:\projects\ThatInterpretingAgency\tests\EndToEndTests\obj\Debug\net9.0\EndToEndTests.genruntimeconfig.cache
 C:\projects\ThatInterpretingAgency\tests\EndToEndTests\obj\Debug\net9.0\ref\EndToEndTests.dll
+C:\projects\ThatInterpretingAgency\tests\EndToEndTests\obj\Debug\net9.0\EndToEndTests.sourcelink.json

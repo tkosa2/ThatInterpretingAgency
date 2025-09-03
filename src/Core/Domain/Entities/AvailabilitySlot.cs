@@ -1,18 +1,22 @@
 using ThatInterpretingAgency.Core.Domain.Common;
 
-namespace ThatInterpretingAgency.Core.Domain.ValueObjects;
+namespace ThatInterpretingAgency.Core.Domain.Entities;
 
-public class AvailabilitySlot : ValueObject
+public class AvailabilitySlot : Entity
 {
+    public Guid InterpreterId { get; private set; }
     public DateTime StartTime { get; private set; }
     public DateTime EndTime { get; private set; }
     public string TimeZone { get; private set; } = string.Empty;
     public AvailabilityStatus Status { get; private set; }
     public string? Notes { get; private set; }
 
+    // Navigation property
+    public virtual Interpreter Interpreter { get; private set; } = null!;
+
     private AvailabilitySlot() { }
 
-    public static AvailabilitySlot Create(DateTime startTime, DateTime endTime, string timeZone, string? notes = null)
+    public static AvailabilitySlot Create(Guid interpreterId, DateTime startTime, DateTime endTime, string timeZone, string? notes = null)
     {
         if (startTime >= endTime)
             throw new ArgumentException("Start time must be before end time", nameof(startTime));
@@ -22,6 +26,7 @@ public class AvailabilitySlot : ValueObject
 
         return new AvailabilitySlot
         {
+            InterpreterId = interpreterId,
             StartTime = startTime,
             EndTime = endTime,
             TimeZone = timeZone.Trim(),
@@ -37,16 +42,19 @@ public class AvailabilitySlot : ValueObject
 
         StartTime = startTime;
         EndTime = endTime;
+        UpdateTimestamp();
     }
 
     public void UpdateStatus(AvailabilityStatus newStatus)
     {
         Status = newStatus;
+        UpdateTimestamp();
     }
 
     public void UpdateNotes(string? notes)
     {
         Notes = notes?.Trim();
+        UpdateTimestamp();
     }
 
     public bool OverlapsWith(AvailabilitySlot other)
@@ -61,14 +69,7 @@ public class AvailabilitySlot : ValueObject
 
     public TimeSpan Duration => EndTime - StartTime;
 
-    protected override IEnumerable<object> GetEqualityComponents()
-    {
-        yield return StartTime;
-        yield return EndTime;
-        yield return TimeZone;
-        yield return Status;
-        yield return Notes ?? string.Empty;
-    }
+
 }
 
 public enum AvailabilityStatus

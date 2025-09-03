@@ -105,3 +105,4 @@ C:\projects\ThatInterpretingAgency\tests\UnitTests\obj\Debug\net9.0\refint\UnitT
 C:\projects\ThatInterpretingAgency\tests\UnitTests\obj\Debug\net9.0\UnitTests.pdb
 C:\projects\ThatInterpretingAgency\tests\UnitTests\obj\Debug\net9.0\UnitTests.genruntimeconfig.cache
 C:\projects\ThatInterpretingAgency\tests\UnitTests\obj\Debug\net9.0\ref\UnitTests.dll
+C:\projects\ThatInterpretingAgency\tests\UnitTests\obj\Debug\net9.0\UnitTests.sourcelink.json

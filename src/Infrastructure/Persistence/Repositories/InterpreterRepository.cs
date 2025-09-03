@@ -20,14 +20,14 @@ public class InterpreterRepository : IInterpreterRepository
     public async Task<Interpreter?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Interpreters
-            .Include(i => i.Availability)
+            .Include(i => i.AvailabilitySlots)
             .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
     }
 
     public async Task<IEnumerable<Interpreter>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Interpreters
-            .Include(i => i.Availability)
+            .Include(i => i.AvailabilitySlots)
             .ToListAsync(cancellationToken);
     }
 
@@ -53,7 +53,7 @@ public class InterpreterRepository : IInterpreterRepository
     public async Task<IEnumerable<Interpreter>> GetByAgencyIdAsync(Guid agencyId, CancellationToken cancellationToken = default)
     {
         return await _context.Interpreters
-            .Include(i => i.Availability)
+            .Include(i => i.AvailabilitySlots)
             .Where(i => i.AgencyId == agencyId)
             .ToListAsync(cancellationToken);
     }
@@ -61,7 +61,7 @@ public class InterpreterRepository : IInterpreterRepository
     public async Task<Interpreter?> GetByAgencyAndUserIdAsync(Guid agencyId, string userId, CancellationToken cancellationToken = default)
     {
         return await _context.Interpreters
-            .Include(i => i.Availability)
+            .Include(i => i.AvailabilitySlots)
             .FirstOrDefaultAsync(i => i.AgencyId == agencyId && i.UserId == userId, cancellationToken);
     }
 }
